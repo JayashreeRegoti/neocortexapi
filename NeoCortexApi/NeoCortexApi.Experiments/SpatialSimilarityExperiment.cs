@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace NeoCortexApi.Experiments
             double minOctOverlapCycles = 1.0;
             double maxBoost = 5.0;
 
-            // We will use 200 bits to represe nt an input vector (pattern).
+            // We will use 200 bits to represent an input vector (pattern).
             int inputBits = 200;
 
             // We will build a slice of the cortex with the given number of mini-columns
@@ -82,6 +83,99 @@ namespace NeoCortexApi.Experiments
             RunExperiment(cfg, encoder, inputValues);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        [TestMethod]
+        public void SpatialSimilarityExperimentImageTest()
+        {
+            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
+
+            // Used as a boosting parameters
+            // that ensure homeostatic plasticity effect.
+            double minOctOverlapCycles = 1.0;
+            double maxBoost = 5.0;
+
+            // We will use 250 bits to represe nt an input vector (pattern).
+            int inputBits = 250;
+
+            // We will build a slice of the cortex with the given number of mini-columns
+            int numColumns = 2048;
+
+            //
+            // This is a set of configuration parameters used in the experiment.
+            HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
+            {
+                CellsPerColumn = 10,
+                MaxBoost = maxBoost,
+                DutyCyclePeriod = 100,
+                MinPctOverlapDutyCycles = minOctOverlapCycles,
+                StimulusThreshold = 5,
+                GlobalInhibition = true,
+                NumActiveColumnsPerInhArea = 0.02 * numColumns,
+                PotentialRadius = (int)(0.15 * inputBits),
+                LocalAreaDensity = -1,//0.5,
+                ActivationThreshold = 10,
+                MaxSynapsesPerSegment = (int)(0.01 * numColumns),
+                Random = new ThreadSafeRandom(42)
+            };
+
+            //
+            // We create here 100 random input values.
+
+            Bitmap image = (Bitmap)Image.FromFile("C:\\Users\\JayashreeRegoti\\IndividualProject\\artifialVectors\\png5.png");
+            int[,] imageArray = ImageConverter.BitmapToArray2D(image);
+
+            var nonZeroBitStart = -16777220;
+            var nonZeroBitEnd = -16777200;
+
+
+            //List<int[]> inputValues = new List<int[]>(); //load image with 1,0 bits 
+            var inputValues = Enumerable.Range(0, imageArray.GetLength(0))
+                .Select(row => Enumerable.Range(0, imageArray.GetLength(1))
+                .Select(col =>
+                {
+                    var value = imageArray[row, col];
+                    if (value > nonZeroBitStart && value < nonZeroBitEnd)
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }).ToArray()).ToList();
+
+            var contents = inputValues.Select(x => $"{string.Concat(x.Select(y => $"{y.ToString()},"))}\n");
+
+            File.WriteAllLines("C:\\Users\\JayashreeRegoti\\IndividualProject\\artifialVectors\\OutFile5.txt", contents);
+
+            RunExperiment(cfg, null, inputValues);
+        }
+
+        public byte[] imageToByteArray(System.Drawing.Image imageIn)
+        {
+            MemoryStream ms = new MemoryStream();
+            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
+
+        public int[,] ConvertArray(byte[] Input, int size)
+        {
+            int[,] Output = new int[(int)(Input.Length / size), size];
+            System.IO.StreamWriter sw = new System.IO.StreamWriter(@"C:\\Users\\JayashreeRegoti\\IndividualProject\\artifialVectors\\OutFile.txt");
+            for (int i = 0; i < Input.Length; i += size)
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    Output[(int)(i / size), j] = Input[i + j];
+                    sw.Write(Input[i + j]);
+                }
+                sw.WriteLine("");
+            }
+            sw.Close();
+            return Output;
+        }
 
         /// <summary>
         /// Creates training vectors.
