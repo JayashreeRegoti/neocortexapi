@@ -21,7 +21,7 @@ namespace NeoCortexApi.Experiments
     /// 
     /// </summary>
     [TestClass]
-    public class SpatialSimilarityExperiment
+    public class SpatialSimilarityImageExperiment
     {
         /// <summary>
         /// 
@@ -83,6 +83,136 @@ namespace NeoCortexApi.Experiments
             List<int[]> inputValues = GetTrainingvectors(0, inputBits, width);
 
             RunExperiment(cfg, encoder, inputValues);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [DataTestMethod]
+        [DataRow("line1_1.png", "line1_2.png", "line1_3.png", "line1_4.png", "line1_5.png", 28)]
+        //[DataRow(@"white1.png", 200, 10)]
+        //[DataRow(@"white2.png", 200, 10)]
+        //[DataRow(@"white3.png", 200, 10)]
+        //[DataRow(@"white4.png", 200, 10)]
+        //[DataRow(@"white5.png", 200, 10)]
+        //[DynamicData(nameof(GetImageData), DynamicDataSourceType.Method)]
+        public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
+        {
+            var testImageNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
+            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
+
+            // Used as a boosting parameters
+            // that ensure homeostatic plasticity effect.
+            double minOctOverlapCycles = 1.0;
+            double maxBoost = 5.0;
+
+            // We will use 250 bits to represe nt an input vector (pattern).
+            int inputBits = imageSize * imageSize;
+
+            // We will build a slice of the cortex with the given number of mini-columns
+            int numColumns = 2048;
+
+            //
+            // This is a set of configuration parameters used in the experiment.
+            HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
+            {
+                CellsPerColumn = 10,
+                MaxBoost = maxBoost,
+                DutyCyclePeriod = 100,
+                MinPctOverlapDutyCycles = minOctOverlapCycles,
+                StimulusThreshold = 5,
+                GlobalInhibition = true,
+                NumActiveColumnsPerInhArea = 0.02 * numColumns,
+                PotentialRadius = (int)(0.15 * inputBits),
+                LocalAreaDensity = -1,//0.5,
+                ActivationThreshold = 10,
+                MaxSynapsesPerSegment = (int)(0.01 * numColumns),
+                Random = new ThreadSafeRandom(42)
+            };
+            //var inputValues = lines.Select(line => line.Select(character => (int)character).ToArray()).ToList();
+
+            //Bitmap image = (Bitmap)Image.FromFile("D:\\artificalVectors\\png5.png");
+
+            //int[,] imageArray = ImageConverter.BitmapToArray2D(image);
+
+            //var nonZeroBitStart = -16777220;
+            //var nonZeroBitEnd = -16777200;
+
+
+            ////List<int[]> inputValues = new List<int[]>(); //load image with 1,0 bits 
+            //var inputValues1 = Enumerable.Range(0, imageArray.GetLength(0))
+            //    .Select(row => Enumerable.Range(0, imageArray.GetLength(1))
+            //    .Select(col =>
+            //    {
+            //        var value = imageArray[row, col];
+            //        if (value > nonZeroBitStart && value < nonZeroBitEnd)
+            //        {
+            //            return 1;
+            //        }
+            //        else
+            //        {
+            //            return 0;
+            //        }
+            //    }).ToArray()).ToList();
+
+            //var contents = inputValues.Select(x => $"{string.Concat(x.Select(y => $"{y.ToString()},"))}\n");
+
+            //File.WriteAllLines("D:\\artificalVectors\\OutFile5.txt", contents);
+
+            var inputValues = new List<int[]>(); //load image with 1,0 bits 
+
+            foreach (var imageName in testImageNames)
+            {
+                Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
+                var binarizerFileName = $"D:\\artificalVectors\\{imageName.Split('.')[0]}_output_{new Random().Next()}.txt";
+                binarizer.CreateBinary($"D:\\artificalVectors\\{imageName}", binarizerFileName);
+                var lines = File.ReadAllLines(binarizerFileName);
+
+                var inputLine = new List<int>();
+                foreach (var line in lines)
+                {
+                    var lineValues = new List<int>();
+                    foreach (var character in line)
+                    {
+                        if (Int32.TryParse(character.ToString(), out int bitValue))
+                        {
+                            lineValues.Add(bitValue);
+                        }
+                        else
+                        {
+                            lineValues.Add(0);
+                        }
+                    }
+                    inputLine.AddRange(lineValues);
+                }
+                inputValues.Add(inputLine.ToArray());
+            }
+
+            RunExperiment(cfg, null, inputValues);
+        }
+
+        public byte[] imageToByteArray(System.Drawing.Image imageIn)
+        {
+            MemoryStream ms = new MemoryStream();
+            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
+
+        public int[,] ConvertArray(byte[] Input, int size)
+        {
+            int[,] Output = new int[(int)(Input.Length / size), size];
+            System.IO.StreamWriter sw = new System.IO.StreamWriter(@"D:\\artificalVectors\\OutFile5.txt");
+            for (int i = 0; i < Input.Length; i += size)
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    Output[(int)(i / size), j] = Input[i + j];
+                    sw.Write(Input[i + j]);
+                }
+                sw.WriteLine("");
+            }
+            sw.Close();
+            return Output;
         }
 
         /// <summary>
@@ -193,7 +323,7 @@ namespace NeoCortexApi.Experiments
 
             for (int cycle = 0; cycle < maxSPLearningCycles; cycle++)
             {
-                Debug.WriteLine($"Cycle  ** {cycle} ** Stability: {isInStableState}");
+                //Debug.WriteLine($"Cycle  ** {cycle} ** Stability: {isInStableState}");
 
                 //
                 // This trains the layer on input pattern.
@@ -215,7 +345,7 @@ namespace NeoCortexApi.Experiments
 
                     similarity = MathHelpers.CalcArraySimilarity(actColsIndicies, prevActiveColIndicies[inputKey]);
 
-                    Debug.WriteLine($"[i={inputKey}, cols=:{actColsIndicies.Length} s={similarity}] SDR: {Helpers.StringifyVector(actColsIndicies)}");
+                    //Debug.WriteLine($"[i={inputKey}, cols=:{actColsIndicies.Length} s={similarity}] SDR: {Helpers.StringifyVector(actColsIndicies)}");
 
                     prevActiveCols[inputKey] = activeColumns;
                     prevActiveColIndicies[inputKey] = actColsIndicies;
@@ -339,5 +469,11 @@ namespace NeoCortexApi.Experiments
         {
             return $"I-{i.ToString("D2")}";
         }
+    }
+
+    public class TestImageData
+    {
+        internal IEnumerable<string> ImageNames { get; set; }
+        internal int ImageSize { get; set; }
     }
 }
