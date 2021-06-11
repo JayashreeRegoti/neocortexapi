@@ -26,76 +26,8 @@ namespace NeoCortexApi.Experiments
         /// <summary>
         /// 
         /// </summary>
-        [TestMethod]
-        public void SpatialSimilarityExperimentTest()
-        {
-            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
-
-            // Used as a boosting parameters
-            // that ensure homeostatic plasticity effect.
-            double minOctOverlapCycles = 1.0;
-            double maxBoost = 5.0;
-
-            // We will use 200 bits to represent an input vector (pattern).
-            int inputBits = 200;
-
-            // We will build a slice of the cortex with the given number of mini-columns
-            int numColumns = 2048;
-
-            //
-            // This is a set of configuration parameters used in the experiment.
-            HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
-            {
-                CellsPerColumn = 10,
-                MaxBoost = maxBoost,
-                DutyCyclePeriod = 100,
-                MinPctOverlapDutyCycles = minOctOverlapCycles,
-                StimulusThreshold = 5,
-                GlobalInhibition = true,
-                NumActiveColumnsPerInhArea = 0.02 * numColumns,
-                PotentialRadius = (int)(0.15 * inputBits),
-                LocalAreaDensity = -1,//0.5,
-                ActivationThreshold = 10,
-                MaxSynapsesPerSegment = (int)(0.01 * numColumns),
-                Random = new ThreadSafeRandom(42)
-            };
-
-            double max = 100;
-            int width = 15;
-            //
-            // This dictionary defines a set of typical encoder parameters.
-            Dictionary<string, object> settings = new Dictionary<string, object>()
-            {
-                { "W", width},
-                { "N", inputBits},
-                { "Radius", -1.0},
-                { "MinVal", 0.0},
-                { "Periodic", false},
-                { "Name", "scalar"},
-                { "ClipInput", false},
-                { "MaxVal", max}
-            };
-
-            EncoderBase encoder = new ScalarEncoder(settings);
-
-            //
-            // We create here 100 random input values.
-            List<int[]> inputValues = GetTrainingvectors(0, inputBits, width);
-
-            RunExperiment(cfg, encoder, inputValues);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         [DataTestMethod]
         [DataRow("line1_1.png", "line1_2.png", "line1_3.png", "line1_4.png", "line1_5.png", 28)]
-        //[DataRow(@"white1.png", 200, 10)]
-        //[DataRow(@"white2.png", 200, 10)]
-        //[DataRow(@"white3.png", 200, 10)]
-        //[DataRow(@"white4.png", 200, 10)]
-        //[DataRow(@"white5.png", 200, 10)]
-        //[DynamicData(nameof(GetImageData), DynamicDataSourceType.Method)]
         public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
         {
             var testImageNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
@@ -106,7 +38,7 @@ namespace NeoCortexApi.Experiments
             double minOctOverlapCycles = 1.0;
             double maxBoost = 5.0;
 
-            // We will use 250 bits to represe nt an input vector (pattern).
+            // input bits is the total pixel size of an image.
             int inputBits = imageSize * imageSize;
 
             // We will build a slice of the cortex with the given number of mini-columns
@@ -129,35 +61,6 @@ namespace NeoCortexApi.Experiments
                 MaxSynapsesPerSegment = (int)(0.01 * numColumns),
                 Random = new ThreadSafeRandom(42)
             };
-            //var inputValues = lines.Select(line => line.Select(character => (int)character).ToArray()).ToList();
-
-            //Bitmap image = (Bitmap)Image.FromFile("D:\\artificalVectors\\png5.png");
-
-            //int[,] imageArray = ImageConverter.BitmapToArray2D(image);
-
-            //var nonZeroBitStart = -16777220;
-            //var nonZeroBitEnd = -16777200;
-
-
-            ////List<int[]> inputValues = new List<int[]>(); //load image with 1,0 bits 
-            //var inputValues1 = Enumerable.Range(0, imageArray.GetLength(0))
-            //    .Select(row => Enumerable.Range(0, imageArray.GetLength(1))
-            //    .Select(col =>
-            //    {
-            //        var value = imageArray[row, col];
-            //        if (value > nonZeroBitStart && value < nonZeroBitEnd)
-            //        {
-            //            return 1;
-            //        }
-            //        else
-            //        {
-            //            return 0;
-            //        }
-            //    }).ToArray()).ToList();
-
-            //var contents = inputValues.Select(x => $"{string.Concat(x.Select(y => $"{y.ToString()},"))}\n");
-
-            //File.WriteAllLines("D:\\artificalVectors\\OutFile5.txt", contents);
 
             var inputValues = new List<int[]>(); //load image with 1,0 bits 
 
@@ -189,70 +92,6 @@ namespace NeoCortexApi.Experiments
             }
 
             RunExperiment(cfg, null, inputValues);
-        }
-
-        public byte[] imageToByteArray(System.Drawing.Image imageIn)
-        {
-            MemoryStream ms = new MemoryStream();
-            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            return ms.ToArray();
-        }
-
-        public int[,] ConvertArray(byte[] Input, int size)
-        {
-            int[,] Output = new int[(int)(Input.Length / size), size];
-            System.IO.StreamWriter sw = new System.IO.StreamWriter(@"D:\\artificalVectors\\OutFile5.txt");
-            for (int i = 0; i < Input.Length; i += size)
-            {
-                for (int j = 0; j < size; j++)
-                {
-                    Output[(int)(i / size), j] = Input[i + j];
-                    sw.Write(Input[i + j]);
-                }
-                sw.WriteLine("");
-            }
-            sw.Close();
-            return Output;
-        }
-
-        /// <summary>
-        /// Creates training vectors.
-        /// </summary>
-        /// <param name="experimentCode"></param>
-        /// <param name="inputBits"></param>
-        /// <returns></returns>
-        private List<int[]> GetTrainingvectors(int experimentCode, int inputBits, int width)
-        {
-            if (experimentCode == 0)
-            {
-                //
-                // We create here 2 vectors.
-                List<int[]> inputValues = new List<int[]>();
-
-                for (int i = 0; i < 10; i += 1)
-                {
-                    inputValues.Add(NeoCortexUtils.CreateVector(inputBits, i, i + width));
-                }
-
-
-                return inputValues;
-            }
-            else if (experimentCode == 1)
-            {
-                // todo. create or load other test vectors/images here 
-                // We create here 2 vectors.
-                List<int[]> inputValues = new List<int[]>();
-
-                for (int i = 0; i < 10; i += 1)
-                {
-                    inputValues.Add(NeoCortexUtils.CreateVector(inputBits, i, i + width));
-                }
-
-
-                return inputValues;
-            }
-            else
-                throw new ApplicationException("Invalid experimentCode");
         }
 
         /// <summary>
@@ -469,11 +308,5 @@ namespace NeoCortexApi.Experiments
         {
             return $"I-{i.ToString("D2")}";
         }
-    }
-
-    public class TestImageData
-    {
-        internal IEnumerable<string> ImageNames { get; set; }
-        internal int ImageSize { get; set; }
     }
 }
