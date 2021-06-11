@@ -23,6 +23,17 @@ namespace NeoCortexApi.Experiments
     [TestClass]
     public class SpatialSimilarityImageExperiment
     {
+        private const string TestDataFolder = "TestData\\SpatialSimilarityImageExperiment";
+        private const string TestResultFolder = "TestResults\\SpatialSimilarityImageExperiment";
+        private static string TestDataFullPath = Path.Combine(Directory.GetCurrentDirectory(), TestDataFolder);
+        private static string TestResultFullPath = Path.Combine(Directory.GetCurrentDirectory(), TestResultFolder);
+
+
+        public SpatialSimilarityImageExperiment()
+        {
+            Directory.CreateDirectory(TestResultFolder);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -71,11 +82,11 @@ namespace NeoCortexApi.Experiments
 
             foreach (var testImageFileName in testImageFileNames)
             {
-                var binarizerFileName = Path.Combine(Directory.GetCurrentDirectory(), $"{testImageFileName.Split('.')[0]}_output_{new Random().Next()}.txt");
-                var sourceDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestData\\SpatialSimilarityImageExperiment");
+                var binarizerFileName = Path.Combine(TestResultFullPath, 
+                    $"{testImageFileName.Split('.')[0]}_binary_{new Random().Next()}.txt");
 
                 Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
-                binarizer.CreateBinary(Path.Combine(sourceDirectory, testImageFileName), binarizerFileName);
+                binarizer.CreateBinary(Path.Combine(TestDataFullPath, testImageFileName), binarizerFileName);
                 var lines = File.ReadAllLines(binarizerFileName);
 
                 var inputLine = new List<int>();
@@ -297,8 +308,8 @@ namespace NeoCortexApi.Experiments
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
 
-
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}_q.png", Color.Yellow, Color.Gray, 1024, 1024);
+            var fileName = Path.Combine(TestResultFullPath, $"{inputKey}.png");
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, fileName, Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static void DrawImages(HtmConfig cfg, string inputKey, int[] input, int[] activeColumns)
