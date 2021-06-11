@@ -1,9 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +29,39 @@
     <ProjectReference Include="..\NeoCortexEntities\NeoCortexEntities.csproj" />
     <ProjectReference Include="..\NeoCortexUtils\NeoCortexUtils.csproj" />
     <ProjectReference Include="..\WebSocketNeuroVisualizer\WebSocketNeuroVisualizer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_5.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_5.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

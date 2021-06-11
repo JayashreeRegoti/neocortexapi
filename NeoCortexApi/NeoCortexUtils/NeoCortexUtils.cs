@@ -197,7 +197,6 @@ namespace NeoCortex
                     }
                 }
             }
-
             myBitmap.Save(filePath, ImageFormat.Png);
         }
 

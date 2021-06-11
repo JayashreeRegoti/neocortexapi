@@ -13,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LearningFoundation.ImageBinarizer;
-
+using System.Reflection;
 
 namespace NeoCortexApi.Experiments
 {
@@ -21,14 +21,32 @@ namespace NeoCortexApi.Experiments
     /// 
     /// </summary>
     [TestClass]
-    public class SpatialSimilarityExperiment
+    public class SpatialSimilarityImageExperiment
     {
+        private const string TestDataFolder = "TestData\\SpatialSimilarityImageExperiment";
+        private const string TestResultFolder = "TestResults\\SpatialSimilarityImageExperiment";
+        private static string TestDataFullPath = Path.Combine(Directory.GetCurrentDirectory(), TestDataFolder);
+        private static string TestResultFullPath = Path.Combine(Directory.GetCurrentDirectory(), TestResultFolder);
+
+
+        public SpatialSimilarityImageExperiment()
+        {
+            Directory.CreateDirectory(TestResultFolder);
+        }
+
         /// <summary>
         /// 
         /// </summary>
-        [TestMethod]
-        public void SpatialSimilarityExperimentTest()
+        [DataTestMethod]
+        [DataRow(
+            "line_1_1.png",
+            "line_1_2.png",
+            "line_1_3.png",
+            "line_1_4.png",
+            "line_1_5.png", 28)]
+        public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
         {
+            var testImageNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
             Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
 
             // Used as a boosting parameters
@@ -36,8 +54,8 @@ namespace NeoCortexApi.Experiments
             double minOctOverlapCycles = 1.0;
             double maxBoost = 5.0;
 
-            // We will use 200 bits to represent an input vector (pattern).
-            int inputBits = 200;
+            // input bits is the total pixel size of an image.
+            int inputBits = imageSize * imageSize;
 
             // We will build a slice of the cortex with the given number of mini-columns
             int numColumns = 2048;
@@ -60,69 +78,38 @@ namespace NeoCortexApi.Experiments
                 Random = new ThreadSafeRandom(42)
             };
 
-            double max = 100;
-            int width = 15;
-            //
-            // This dictionary defines a set of typical encoder parameters.
-            Dictionary<string, object> settings = new Dictionary<string, object>()
+            var inputValues = new List<int[]>(); //load image with 1,0 bits 
+
+            foreach (var testImageFileName in testImageFileNames)
             {
-                { "W", width},
-                { "N", inputBits},
-                { "Radius", -1.0},
-                { "MinVal", 0.0},
-                { "Periodic", false},
-                { "Name", "scalar"},
-                { "ClipInput", false},
-                { "MaxVal", max}
-            };
+                var binarizerFileName = Path.Combine(TestResultFullPath, 
+                    $"{testImageFileName.Split('.')[0]}_binary_{new Random().Next()}.txt");
 
-            EncoderBase encoder = new ScalarEncoder(settings);
+                Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
+                binarizer.CreateBinary(Path.Combine(TestDataFullPath, testImageFileName), binarizerFileName);
+                var lines = File.ReadAllLines(binarizerFileName);
 
-            //
-            // We create here 100 random input values.
-            List<int[]> inputValues = GetTrainingvectors(0, inputBits, width);
-
-            RunExperiment(cfg, encoder, inputValues);
-        }
-
-        /// <summary>
-        /// Creates training vectors.
-        /// </summary>
-        /// <param name="experimentCode"></param>
-        /// <param name="inputBits"></param>
-        /// <returns></returns>
-        private List<int[]> GetTrainingvectors(int experimentCode, int inputBits, int width)
-        {
-            if (experimentCode == 0)
-            {
-                //
-                // We create here 2 vectors.
-                List<int[]> inputValues = new List<int[]>();
-
-                for (int i = 0; i < 10; i += 1)
+                var inputLine = new List<int>();
+                foreach (var line in lines)
                 {
-                    inputValues.Add(NeoCortexUtils.CreateVector(inputBits, i, i + width));
+                    var lineValues = new List<int>();
+                    foreach (var character in line)
+                    {
+                        if (Int32.TryParse(character.ToString(), out int bitValue))
+                        {
+                            lineValues.Add(bitValue);
+                        }
+                        else
+                        {
+                            lineValues.Add(0);
+                        }
+                    }
+                    inputLine.AddRange(lineValues);
                 }
-
-
-                return inputValues;
+                inputValues.Add(inputLine.ToArray());
             }
-            else if (experimentCode == 1)
-            {
-                // todo. create or load other test vectors/images here 
-                // We create here 2 vectors.
-                List<int[]> inputValues = new List<int[]>();
 
-                for (int i = 0; i < 10; i += 1)
-                {
-                    inputValues.Add(NeoCortexUtils.CreateVector(inputBits, i, i + width));
-                }
-
-
-                return inputValues;
-            }
-            else
-                throw new ApplicationException("Invalid experimentCode");
+            RunExperiment(cfg, null, inputValues);
         }
 
         /// <summary>
@@ -193,7 +180,7 @@ namespace NeoCortexApi.Experiments
 
             for (int cycle = 0; cycle < maxSPLearningCycles; cycle++)
             {
-                Debug.WriteLine($"Cycle  ** {cycle} ** Stability: {isInStableState}");
+                //Debug.WriteLine($"Cycle  ** {cycle} ** Stability: {isInStableState}");
 
                 //
                 // This trains the layer on input pattern.
@@ -215,7 +202,7 @@ namespace NeoCortexApi.Experiments
 
                     similarity = MathHelpers.CalcArraySimilarity(actColsIndicies, prevActiveColIndicies[inputKey]);
 
-                    Debug.WriteLine($"[i={inputKey}, cols=:{actColsIndicies.Length} s={similarity}] SDR: {Helpers.StringifyVector(actColsIndicies)}");
+                    //Debug.WriteLine($"[i={inputKey}, cols=:{actColsIndicies.Length} s={similarity}] SDR: {Helpers.StringifyVector(actColsIndicies)}");
 
                     prevActiveCols[inputKey] = activeColumns;
                     prevActiveColIndicies[inputKey] = actColsIndicies;
@@ -321,7 +308,8 @@ namespace NeoCortexApi.Experiments
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
 
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}.png", Color.Yellow, Color.Gray, 1024, 1024);
+            var fileName = Path.Combine(TestResultFullPath, $"{inputKey}.png");
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, fileName, Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static void DrawImages(HtmConfig cfg, string inputKey, int[] input, int[] activeColumns)
@@ -332,7 +320,7 @@ namespace NeoCortexApi.Experiments
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
 
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}.png", Color.Yellow, Color.Gray, 1024, 1024);
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}_q.png", Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static string GetInputGekFromIndex(int i)
