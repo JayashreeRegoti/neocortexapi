@@ -46,7 +46,7 @@ namespace NeoCortexApi.Experiments
             "line_1_5.png", 28)]
         public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
         {
-            var testImageNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
+            var testImageFileNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
             Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
 
             // Used as a boosting parameters
