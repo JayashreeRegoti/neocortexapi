@@ -13,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LearningFoundation.ImageBinarizer;
-
+using System.Reflection;
 
 namespace NeoCortexApi.Experiments
 {
@@ -27,7 +27,12 @@ namespace NeoCortexApi.Experiments
         /// 
         /// </summary>
         [DataTestMethod]
-        [DataRow("line1_1.png", "line1_2.png", "line1_3.png", "line1_4.png", "line1_5.png", 28)]
+        [DataRow(
+            "line_1_1.png",
+            "line_1_2.png",
+            "line_1_3.png",
+            "line_1_4.png",
+            "line_1_5.png", 28)]
         public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
         {
             var testImageNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
@@ -64,11 +69,13 @@ namespace NeoCortexApi.Experiments
 
             var inputValues = new List<int[]>(); //load image with 1,0 bits 
 
-            foreach (var imageName in testImageNames)
+            foreach (var testImageFileName in testImageFileNames)
             {
+                var binarizerFileName = Path.Combine(Directory.GetCurrentDirectory(), $"{testImageFileName.Split('.')[0]}_output_{new Random().Next()}.txt");
+                var sourceDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestData\\SpatialSimilarityImageExperiment");
+
                 Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
-                var binarizerFileName = $"D:\\artificalVectors\\{imageName.Split('.')[0]}_output_{new Random().Next()}.txt";
-                binarizer.CreateBinary($"D:\\artificalVectors\\{imageName}", binarizerFileName);
+                binarizer.CreateBinary(Path.Combine(sourceDirectory, testImageFileName), binarizerFileName);
                 var lines = File.ReadAllLines(binarizerFileName);
 
                 var inputLine = new List<int>();
@@ -290,7 +297,8 @@ namespace NeoCortexApi.Experiments
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
 
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}.png", Color.Yellow, Color.Gray, 1024, 1024);
+
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}_q.png", Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static void DrawImages(HtmConfig cfg, string inputKey, int[] input, int[] activeColumns)
@@ -301,7 +309,7 @@ namespace NeoCortexApi.Experiments
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
 
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}.png", Color.Yellow, Color.Gray, 1024, 1024);
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}_q.png", Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static string GetInputGekFromIndex(int i)

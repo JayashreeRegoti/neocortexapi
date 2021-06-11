@@ -31,4 +31,37 @@
     <ProjectReference Include="..\WebSocketNeuroVisualizer\WebSocketNeuroVisualizer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_5.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_5.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

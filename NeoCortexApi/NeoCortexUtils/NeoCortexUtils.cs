@@ -197,8 +197,7 @@ namespace NeoCortex
                     }
                 }
             }
-            myBitmap.Save($"D:\\artificalVectors\\OutFile_{new Random().Next()}.png", ImageFormat.Png);
-            //myBitmap.Save(filePath, ImageFormat.Png);
+            myBitmap.Save(filePath, ImageFormat.Png);
         }
 
 
