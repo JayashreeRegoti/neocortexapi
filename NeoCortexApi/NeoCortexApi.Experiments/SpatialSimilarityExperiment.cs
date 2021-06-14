@@ -23,6 +23,16 @@ namespace NeoCortexApi.Experiments
     [TestClass]
     public class SpatialSimilarityExperiment
     {
+        private const string TestDataFolder = "TestData\\SpatialSimilarityExperiment";
+        private const string TestResultFolder = "TestResults\\SpatialSimilarityExperiment";
+        private static string TestDataFullPath = Path.Combine(Directory.GetCurrentDirectory(), TestDataFolder);
+        private static string TestResultFullPath = Path.Combine(Directory.GetCurrentDirectory(), TestResultFolder);
+
+        public SpatialSimilarityExperiment()
+        {
+            Directory.CreateDirectory(TestResultFolder);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -85,13 +95,97 @@ namespace NeoCortexApi.Experiments
             RunExperiment(cfg, encoder, inputValues);
         }
 
+        [DataTestMethod]
+        [DataRow(
+            new string[]
+            {
+                "face_1_1.png",
+                "face_1_2.png",
+                "face_1_3.png"
+            }, 28)]
+        //[DataRow(
+        //    new string[]
+        //    {
+        //        "line_2_1.png",
+        //        "line_2_2.png",
+        //        "line_2_3.png",
+        //        "line_2_4.png",
+        //        "line_2_5.png" 
+        //    }, 28)]
+        public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize)
+        {
+
+            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
+
+            // Used as a boosting parameters
+            // that ensure homeostatic plasticity effect.
+            double minOctOverlapCycles = 1.0;
+            double maxBoost = 5.0;
+
+            // We will use (square of image size) bits to represent an input vector (pattern).
+            int inputBits = imageSize * imageSize;
+
+            // We will build a slice of the cortex with the given number of mini-columns
+            int numColumns = 2048;
+
+            //
+            // This is a set of configuration parameters used in the experiment.
+            HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
+            {
+                CellsPerColumn = 10,
+                MaxBoost = maxBoost,
+                DutyCyclePeriod = 100,
+                MinPctOverlapDutyCycles = minOctOverlapCycles,
+                StimulusThreshold = 5,
+                GlobalInhibition = true,
+                NumActiveColumnsPerInhArea = 0.02 * numColumns,
+                PotentialRadius = (int)(0.15 * inputBits),
+                LocalAreaDensity = -1,//0.5,
+                ActivationThreshold = 10,
+                MaxSynapsesPerSegment = (int)(0.01 * numColumns),
+                Random = new ThreadSafeRandom(42)
+            };
+
+            double max = 100;
+            int width = 15;
+            //
+            // This dictionary defines a set of typical encoder parameters.
+            Dictionary<string, object> settings = new Dictionary<string, object>()
+            {
+                { "W", width},
+                { "N", inputBits},
+                { "Radius", -1.0},
+                { "MinVal", 0.0},
+                { "Periodic", false},
+                { "Name", "scalar"},
+                { "ClipInput", false},
+                { "MaxVal", max}
+            };
+
+            EncoderBase encoder = new ScalarEncoder(settings);
+
+            //
+            // We create here 100 random input values.
+            List<int[]> inputValues = GetTrainingvectors(
+                experimentCode: 2, 
+                testImageFileNames: testImageFileNames.ToList(), 
+                imageSize: imageSize);
+
+            RunExperiment(cfg, encoder, inputValues);
+        }
+
         /// <summary>
         /// Creates training vectors.
         /// </summary>
         /// <param name="experimentCode"></param>
         /// <param name="inputBits"></param>
         /// <returns></returns>
-        private List<int[]> GetTrainingvectors(int experimentCode, int inputBits, int width)
+        private List<int[]> GetTrainingvectors(
+            int experimentCode,
+            int inputBits = 0,
+            int width = 0,
+            List<string> testImageFileNames = null,
+            int imageSize = 0)
         {
             if (experimentCode == 0)
             {
@@ -121,8 +215,53 @@ namespace NeoCortexApi.Experiments
 
                 return inputValues;
             }
+            else if (experimentCode == 2)
+            {
+                if (testImageFileNames == null || imageSize == 0)
+                {
+                    return new List<int[]>();
+                }
+
+                return GetInputVectorsFromImages(testImageFileNames, imageSize);
+            }
             else
                 throw new ApplicationException("Invalid experimentCode");
+        }
+
+        private static List<int[]> GetInputVectorsFromImages(List<string> testImageFileNames, int imageSize)
+        {
+            List<int[]> inputValues = new List<int[]>();
+
+            foreach (var testImageFileName in testImageFileNames)
+            {
+                var binarizerFileName = Path.Combine(TestResultFullPath,
+                    $"{testImageFileName.Split('.')[0]}_binary_{new Random().Next()}.txt");
+
+                Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
+                binarizer.CreateBinary(Path.Combine(TestDataFullPath, testImageFileName), binarizerFileName);
+                var lines = File.ReadAllLines(binarizerFileName);
+
+                var inputLine = new List<int>();
+                foreach (var line in lines)
+                {
+                    var lineValues = new List<int>();
+                    foreach (var character in line)
+                    {
+                        if (Int32.TryParse(character.ToString(), out int bitValue))
+                        {
+                            lineValues.Add(bitValue);
+                        }
+                        else
+                        {
+                            lineValues.Add(0);
+                        }
+                    }
+                    inputLine.AddRange(lineValues);
+                }
+                inputValues.Add(inputLine.ToArray());
+            }
+
+            return inputValues;
         }
 
         /// <summary>
@@ -193,7 +332,7 @@ namespace NeoCortexApi.Experiments
 
             for (int cycle = 0; cycle < maxSPLearningCycles; cycle++)
             {
-                Debug.WriteLine($"Cycle  ** {cycle} ** Stability: {isInStableState}");
+                //Debug.WriteLine($"Cycle  ** {cycle} ** Stability: {isInStableState}");
 
                 //
                 // This trains the layer on input pattern.
@@ -209,13 +348,13 @@ namespace NeoCortexApi.Experiments
                     // Learn the input pattern.
                     // Output lyrOut is the output of the last module in the layer.
                     sp.compute(input, activeColumns, true);
-                   // DrawImages(cfg, inputKey, input, activeColumns);
+                    // DrawImages(cfg, inputKey, input, activeColumns);
 
                     var actColsIndicies = ArrayUtils.IndexWhere(activeColumns, c => c == 1);
 
                     similarity = MathHelpers.CalcArraySimilarity(actColsIndicies, prevActiveColIndicies[inputKey]);
 
-                    Debug.WriteLine($"[i={inputKey}, cols=:{actColsIndicies.Length} s={similarity}] SDR: {Helpers.StringifyVector(actColsIndicies)}");
+                    // Debug.WriteLine($"[i={inputKey}, cols=:{actColsIndicies.Length} s={similarity}] SDR: {Helpers.StringifyVector(actColsIndicies)}");
 
                     prevActiveCols[inputKey] = activeColumns;
                     prevActiveColIndicies[inputKey] = actColsIndicies;
@@ -320,8 +459,9 @@ namespace NeoCortexApi.Experiments
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimInpArray));
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
-
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}.png", Color.Yellow, Color.Gray, 1024, 1024);
+            
+            var fileName = Path.Combine(TestResultFullPath, $"{inputKey}.png");
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, fileName, Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static void DrawImages(HtmConfig cfg, string inputKey, int[] input, int[] activeColumns)
