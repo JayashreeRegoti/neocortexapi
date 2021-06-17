@@ -96,13 +96,9 @@ namespace NeoCortexApi.Experiments
         }
 
         [DataTestMethod]
-        [DataRow(
-            new string[]
-            {
-                "face_1_1.png",
-                "face_1_2.png",
-                "face_1_3.png"
-            }, 28)]
+        [DataRow(new string[] { "face_1_1.png", "face_1_2.png", "face_1_3.png" }, 28, 0.2, 0.2)]
+        [DataRow(new string[] { "face_1_1.png", "face_1_2.png", "face_1_3.png" }, 28, 0.3, 0.35)]
+        [DataRow(new string[] { "face_1_1.png", "face_1_2.png", "face_1_3.png" }, 28, 0.7, 0.075)]
         //[DataRow(
         //    new string[]
         //    {
@@ -112,11 +108,10 @@ namespace NeoCortexApi.Experiments
         //        "line_2_4.png",
         //        "line_2_5.png" 
         //    }, 28)]
-        public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize)
+        public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize, double localAreaDensityValue, double potentialRadiusValue)
         {
 
-            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
-
+            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");            
             // Used as a boosting parameters
             // that ensure homeostatic plasticity effect.
             double minOctOverlapCycles = 1.0;
@@ -139,12 +134,14 @@ namespace NeoCortexApi.Experiments
                 StimulusThreshold = 5,
                 GlobalInhibition = true,
                 NumActiveColumnsPerInhArea = 0.02 * numColumns,
-                PotentialRadius = (int)(0.15 * inputBits),
-                LocalAreaDensity = -1,//0.5,
+                PotentialRadius = (int)(potentialRadiusValue * inputBits),
+                LocalAreaDensity = localAreaDensityValue, //- 1,//0.5,
                 ActivationThreshold = 10,
                 MaxSynapsesPerSegment = (int)(0.01 * numColumns),
                 Random = new ThreadSafeRandom(42)
             };
+
+            Console.WriteLine($"LocalAreaDensity = {cfg.LocalAreaDensity}, PotentialRadius= {cfg.PotentialRadius}");
 
             double max = 100;
             int width = 15;
