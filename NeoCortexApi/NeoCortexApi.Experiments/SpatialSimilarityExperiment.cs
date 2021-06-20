@@ -96,11 +96,13 @@ namespace NeoCortexApi.Experiments
         }
 
         [DataTestMethod]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 15, 0.3, 0.15)]//LocalAreaDensity = -1,//0.5,
-        [DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.3, 0.15)]//LocalAreaDensity = -1,//0.5,
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 15, 0.2)]//LocalAreaDensity = -1,//0.5,
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 15, 0.4)]
+        [DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.2)]//LocalAreaDensity = -1,//0.5,
+        [DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.4)]
         //[DataRow(new string[] { "box1_1.png", "box1_2.png", "box1_3.png", "box1_4.png", "box1_5.png" }, 10, 0.63, 0.23)]//PotentialRadius = (int)(0.15 * inputBits),
         //[DataRow(new string[] { "face_1_8.png", "face_1_9.png", "face_1_10.png" }, 15, 0.17, 0.3)]
-        public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize, double localAreaDensityValue, double potentialRadiusValue)
+        public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize, double potentialRadiusValue)
         {
 
             Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");            
@@ -127,7 +129,7 @@ namespace NeoCortexApi.Experiments
                 GlobalInhibition = true,
                 NumActiveColumnsPerInhArea = 0.02 * numColumns,
                 PotentialRadius = (int)(potentialRadiusValue * inputBits),
-                LocalAreaDensity = localAreaDensityValue, //- 1,//0.5,
+                LocalAreaDensity =  -1,//0.5,
                 ActivationThreshold = 10,
                 MaxSynapsesPerSegment = (int)(0.01 * numColumns),
                 Random = new ThreadSafeRandom(42)
