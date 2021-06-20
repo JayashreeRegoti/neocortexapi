@@ -96,18 +96,10 @@ namespace NeoCortexApi.Experiments
         }
 
         [DataTestMethod]
-        [DataRow(new string[] { "face_1_1.png", "face_1_2.png", "face_1_3.png" }, 28, 0.2, 0.2)]
-        [DataRow(new string[] { "face_1_1.png", "face_1_2.png", "face_1_3.png" }, 28, 0.3, 0.35)]
-        [DataRow(new string[] { "face_1_1.png", "face_1_2.png", "face_1_3.png" }, 28, 0.7, 0.075)]
-        //[DataRow(
-        //    new string[]
-        //    {
-        //        "line_2_1.png",
-        //        "line_2_2.png",
-        //        "line_2_3.png",
-        //        "line_2_4.png",
-        //        "line_2_5.png" 
-        //    }, 28)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 15, 0.3, 0.15)]//LocalAreaDensity = -1,//0.5,
+        [DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.3, 0.15)]//LocalAreaDensity = -1,//0.5,
+        //[DataRow(new string[] { "box1_1.png", "box1_2.png", "box1_3.png", "box1_4.png", "box1_5.png" }, 10, 0.63, 0.23)]//PotentialRadius = (int)(0.15 * inputBits),
+        //[DataRow(new string[] { "face_1_8.png", "face_1_9.png", "face_1_10.png" }, 15, 0.17, 0.3)]
         public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize, double localAreaDensityValue, double potentialRadiusValue)
         {
 
@@ -232,7 +224,12 @@ namespace NeoCortexApi.Experiments
             foreach (var testImageFileName in testImageFileNames)
             {
                 var binarizerFileName = Path.Combine(TestResultFullPath,
-                    $"{testImageFileName.Split('.')[0]}_binary_{new Random().Next()}.txt");
+                    $"{testImageFileName.Split('.')[0]}_binary.txt");
+
+                if (File.Exists(binarizerFileName))
+                {
+                    File.Delete(binarizerFileName);
+                }
 
                 Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
                 binarizer.CreateBinary(Path.Combine(TestDataFullPath, testImageFileName), binarizerFileName);
@@ -456,8 +453,10 @@ namespace NeoCortexApi.Experiments
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimInpArray));
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
-            
-            var fileName = Path.Combine(TestResultFullPath, $"{inputKey}.png");
+
+            var timestamp = DateTime.UtcNow.ToString("dd_MM_yyyy_HH_mm_ss");
+            //var randomNr = new Random().Next(); 
+            var fileName = Path.Combine(TestResultFullPath, $"{inputKey}_{timestamp}.png");
             NeoCortexUtils.DrawBitmaps(twoDimArrays, fileName, Color.Yellow, Color.Gray, 1024, 1024);
         }
 
