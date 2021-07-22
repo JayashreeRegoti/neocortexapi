@@ -85,6 +85,92 @@ namespace NeoCortexApi.Experiments
             RunExperiment(cfg, encoder, inputValues);
         }
 
+<<<<<<< Updated upstream
+=======
+        [DataTestMethod]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png", "pixel1_6.png", "pixel1_7.png", "pixel1_8.png", "pixel1_9.png", "pixel1_10.png" }, 15, 0.5, 0.2)]
+        //[DataRow(new string[] { "slide_1_1.png", "slide_1_2.png", "slide_1_3.png", "slide_1_4.png", "slide_1_5.png"}, 15, 0.5, 0.2)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png" }, 15, 0.3)]//LocalAreaDensity = -1,//0.5,
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png", "pixel1_6.png", "pixel1_7.png", "pixel1_8.png", "pixel1_9.png", "pixel1_10.png" }, 15, 0.4)]
+        //[DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png" , "box1_13.png" , "box1_14.png" , "box1_15.png" , "box1_16.png", "box1_17.png" }, 15, 0.5, 0.45)]//LocalAreaDensity = -1,//0.5,
+
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png" }, 15, 0.5, 0.45)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.5)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.4, 0.3)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.4)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png" }, 15, -1, 0.015)], "pixel2_4.png", "pixel2_5.png", "pixel2_6.png", "pixel2_7.png", "pixel2_8.png", "pixel2_9.png", "pixel2_10.png"
+        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.4, 0.3)]
+        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.5)]
+        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.48)]
+        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.12)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.25)]
+        //[DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.4)]
+        //[DataRow(new string[] { "box1_1.png", "box1_2.png", "box1_3.png", "box1_4.png", "box1_5.png" }, 10, 0.63, 0.23)]//PotentialRadius = (int)(0.15 * inputBits),
+        //[DataRow(new string[] { "face_1_8.png", "face_1_9.png", "face_1_10.png" }, 15, 0.3)]
+        public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize, double localAreaDensityValue, double potentialRadiusValue)
+        {
+
+            Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");            
+            // Used as a boosting parameters
+            // that ensure homeostatic plasticity effect.
+            double minOctOverlapCycles = 1.0;
+            double maxBoost = 5.0;
+
+            // We will use (square of image size) bits to represent an input vector (pattern).
+            int inputBits = imageSize * imageSize;
+
+            // We will build a slice of the cortex with the given number of mini-columns
+            int numColumns = 2048;
+
+            //
+            // This is a set of configuration parameters used in the experiment.
+            HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
+            {
+                CellsPerColumn = 10,
+                MaxBoost = maxBoost,
+                DutyCyclePeriod = 100,
+                MinPctOverlapDutyCycles = minOctOverlapCycles,
+                StimulusThreshold = 5,
+                GlobalInhibition = false,
+                NumActiveColumnsPerInhArea = 0.02 * numColumns,
+                PotentialRadius = (int)(potentialRadiusValue * inputBits),
+                LocalAreaDensity = localAreaDensityValue,// - 1,//0.5,
+                ActivationThreshold = 10,
+                MaxSynapsesPerSegment = (int)(0.01 * numColumns),
+                Random = new ThreadSafeRandom(42)
+            };
+
+            Console.WriteLine($"LocalAreaDensity = {cfg.LocalAreaDensity}, PotentialRadius= {cfg.PotentialRadius}");
+
+            double max = 100;
+            int width = 15;
+            //
+            // This dictionary defines a set of typical encoder parameters.
+            Dictionary<string, object> settings = new Dictionary<string, object>()
+            {
+                { "W", width},
+                { "N", inputBits},
+                { "Radius", -1.0},
+                { "MinVal", 0.0},
+                { "Periodic", false},
+                { "Name", "scalar"},
+                { "ClipInput", false},
+                { "MaxVal", max}
+            };
+
+            EncoderBase encoder = new ScalarEncoder(settings);
+
+            //
+            // We create here 100 random input values.
+            List<int[]> inputValues = GetTrainingvectors(
+                experimentCode: 2, 
+                testImageFileNames: testImageFileNames.ToList(), 
+                imageSize: imageSize);
+
+            RunExperiment(cfg, encoder, inputValues);
+        }
+
+>>>>>>> Stashed changes
         /// <summary>
         /// Creates training vectors.
         /// </summary>
@@ -228,6 +314,9 @@ namespace NeoCortexApi.Experiments
                     }
                 }
             }
+
+            Debug.WriteLine($"after {maxSPLearningCycles} cycles, system is still not in stable state.");
+
         }
 
 
