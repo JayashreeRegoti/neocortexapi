@@ -41,9 +41,9 @@
     <None Update="TestData\SpatialSimilarityImageExperiment\line_1_3.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-<<<<<<< Updated upstream
     <None Update="TestData\SpatialSimilarityImageExperiment\line_1_4.png">
-=======
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\SpatialSimilarityExperiment\box1_12.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -63,7 +63,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TestData\SpatialSimilarityExperiment\box1_2.PNG">
->>>>>>> Stashed changes
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TestData\SpatialSimilarityImageExperiment\line_1_5.png">
@@ -81,9 +80,9 @@
     <None Update="TestData\SpatialSimilarityImageExperiment\num_7_4.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-<<<<<<< Updated upstream
     <None Update="TestData\SpatialSimilarityImageExperiment\num_7_5.png">
-=======
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\SpatialSimilarityExperiment\box1_8.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -289,7 +288,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TestData\SpatialSimilarityExperiment\slide_1_5.png">
->>>>>>> Stashed changes
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

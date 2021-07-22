@@ -85,8 +85,6 @@ namespace NeoCortexApi.Experiments
             RunExperiment(cfg, encoder, inputValues);
         }
 
-<<<<<<< Updated upstream
-=======
         [DataTestMethod]
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png", "pixel1_6.png", "pixel1_7.png", "pixel1_8.png", "pixel1_9.png", "pixel1_10.png" }, 15, 0.5, 0.2)]
         //[DataRow(new string[] { "slide_1_1.png", "slide_1_2.png", "slide_1_3.png", "slide_1_4.png", "slide_1_5.png"}, 15, 0.5, 0.2)]
@@ -95,14 +93,14 @@ namespace NeoCortexApi.Experiments
         //[DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png" , "box1_13.png" , "box1_14.png" , "box1_15.png" , "box1_16.png", "box1_17.png" }, 15, 0.5, 0.45)]//LocalAreaDensity = -1,//0.5,
 
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png" }, 15, 0.5, 0.45)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.5)]
+        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.5)]
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.4, 0.3)]
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.4)]
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png" }, 15, -1, 0.015)], "pixel2_4.png", "pixel2_5.png", "pixel2_6.png", "pixel2_7.png", "pixel2_8.png", "pixel2_9.png", "pixel2_10.png"
-        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.4, 0.3)]
-        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.5)]
-        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.48)]
-        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.12)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.4, 0.3)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.5)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.48)]
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.12)]
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.25)]
         //[DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.4)]
         //[DataRow(new string[] { "box1_1.png", "box1_2.png", "box1_3.png", "box1_4.png", "box1_5.png" }, 10, 0.63, 0.23)]//PotentialRadius = (int)(0.15 * inputBits),
@@ -170,7 +168,6 @@ namespace NeoCortexApi.Experiments
             RunExperiment(cfg, encoder, inputValues);
         }
 
->>>>>>> Stashed changes
         /// <summary>
         /// Creates training vectors.
         /// </summary>
