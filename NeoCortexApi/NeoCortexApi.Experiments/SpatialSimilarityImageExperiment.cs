@@ -38,13 +38,12 @@ namespace NeoCortexApi.Experiments
         ///
         /// </summary>
         [DataTestMethod]
-        [DataRow(
-            "line_1_1.png",
-            "line_1_2.png",
-            "line_1_3.png",
-            "line_1_4.png",
-            "line_1_5.png", 28)]
-        public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
+        [DataRow(0.2, 0.3,0.7)]//LocalAreaDensity
+        [DataRow(0.2, 0.35, 0.075)]//PotentialRadius = (int)(0.15 * inputBits),
+        [DataRow("line_1_1.png","line_1_2.png","line_1_3.png","line_1_4.png","line_1_5.png", 28, 0.2, 0.2)]
+        [DataRow("line_1_1.png", "line_1_2.png", "line_1_3.png", "line_1_4.png", "line_1_5.png", 28, 0.3, 0.35)]
+        [DataRow("line_1_1.png", "line_1_2.png", "line_1_3.png", "line_1_4.png", "line_1_5.png", 28, 0.7, 0.075)]
+        public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize, int LocalAreaDensityValue, int PotentialRadiusValue)
         {
             var testImageFileNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
             Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
@@ -71,8 +70,8 @@ namespace NeoCortexApi.Experiments
                 StimulusThreshold = 5,
                 GlobalInhibition = true,
                 NumActiveColumnsPerInhArea = 0.02 * numColumns,
-                PotentialRadius = (int)(0.15 * inputBits),
-                LocalAreaDensity = -1,//0.5,
+                //PotentialRadius = (int)(0.15 * inputBits),
+                //LocalAreaDensity = -1,//0.5,
                 ActivationThreshold = 10,
                 MaxSynapsesPerSegment = (int)(0.01 * numColumns),
                 Random = new ThreadSafeRandom(42)

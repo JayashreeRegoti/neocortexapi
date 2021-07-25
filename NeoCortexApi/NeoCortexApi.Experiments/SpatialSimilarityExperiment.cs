@@ -184,7 +184,8 @@ namespace NeoCortexApi.Experiments
         /// <param name="experimentCode"></param>
         /// <param name="inputBits"></param>
         /// <returns></returns>
-        private List<int[]> GetTrainingvectors(int experimentCode,
+        private List<int[]> GetTrainingvectors(
+            int experimentCode,
             int inputBits = 0,
             int width = 0,
             List<string> testImageFileNames = null,
@@ -238,7 +239,12 @@ namespace NeoCortexApi.Experiments
             foreach (var testImageFileName in testImageFileNames)
             {
                 var binarizerFileName = Path.Combine(TestResultFullPath,
-                    $"{testImageFileName.Split('.')[0]}_binary_{new Random().Next()}.txt");
+                    $"{testImageFileName.Split('.')[0]}_binary.txt");
+
+                if (File.Exists(binarizerFileName))
+                {
+                    File.Delete(binarizerFileName);
+                }
 
                 Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
                 binarizer.CreateBinary(Path.Combine(TestDataFullPath, testImageFileName), binarizerFileName);
@@ -266,7 +272,6 @@ namespace NeoCortexApi.Experiments
 
             return inputValues;
         }
-
 
         /// <summary>
         /// Implements the experiment.
@@ -467,7 +472,10 @@ namespace NeoCortexApi.Experiments
             int[,] twoDimOutArray = ArrayUtils.Make2DArray<int>(activeColumns, (int)(Math.Sqrt(cfg.NumColumns) + 0.5), (int)(Math.Sqrt(cfg.NumColumns) + 0.5));
             twoDimArrays.Add(twoDimInpArray = ArrayUtils.Transpose(twoDimOutArray));
 
-            NeoCortexUtils.DrawBitmaps(twoDimArrays, $"{inputKey}.png", Color.Yellow, Color.Gray, 1024, 1024);
+            var timestamp = DateTime.UtcNow.ToString("dd_MM_yyyy_HH_mm_ss");
+            //var randomNr = new Random().Next(); 
+            var fileName = Path.Combine(TestResultFullPath, $"{inputKey}_{timestamp}.png");
+            NeoCortexUtils.DrawBitmaps(twoDimArrays, fileName, Color.Yellow, Color.Gray, 1024, 1024);
         }
 
         private static void DrawImages(HtmConfig cfg, string inputKey, int[] input, int[] activeColumns)

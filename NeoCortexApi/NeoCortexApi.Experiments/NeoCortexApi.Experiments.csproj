@@ -32,16 +32,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_1.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_1.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_2.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_10.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_3.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_11.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\line_1_4.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_2.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TestData\SpatialSimilarityExperiment\box1_12.png">
@@ -68,20 +68,17 @@
     <None Update="TestData\SpatialSimilarityImageExperiment\line_1_5.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_1.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_4.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_2.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_5.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_3.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_6.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_4.png">
+    <None Update="TestData\SpatialSimilarityExperiment\box1_7.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TestData\SpatialSimilarityImageExperiment\num_7_5.png">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TestData\SpatialSimilarityExperiment\box1_8.PNG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
