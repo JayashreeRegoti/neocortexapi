@@ -18,7 +18,7 @@ using System.Reflection;
 namespace NeoCortexApi.Experiments
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     [TestClass]
     public class SpatialSimilarityImageExperiment
@@ -35,7 +35,7 @@ namespace NeoCortexApi.Experiments
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         [DataTestMethod]
         [DataRow(
@@ -46,7 +46,7 @@ namespace NeoCortexApi.Experiments
             "line_1_5.png", 28)]
         public void SpatialSimilarityExperimentImageTest(string firstImageName, string secondImageName, string thirdImageName, string fourthImageName, string fifthImageName, int imageSize)
         {
-            var testImageNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
+            var testImageFileNames = new List<string> { firstImageName, secondImageName, thirdImageName, fourthImageName , fifthImageName };
             Console.WriteLine($"Hello {nameof(SpatialSimilarityExperiment)} experiment.");
 
             // Used as a boosting parameters
@@ -78,11 +78,11 @@ namespace NeoCortexApi.Experiments
                 Random = new ThreadSafeRandom(42)
             };
 
-            var inputValues = new List<int[]>(); //load image with 1,0 bits 
+            var inputValues = new List<int[]>(); //load image with 1,0 bits
 
             foreach (var testImageFileName in testImageFileNames)
             {
-                var binarizerFileName = Path.Combine(TestResultFullPath, 
+                var binarizerFileName = Path.Combine(TestResultFullPath,
                     $"{testImageFileName.Split('.')[0]}_binary_{new Random().Next()}.txt");
 
                 Binarizer binarizer = new Binarizer(200, 200, 200, imageSize, imageSize);
@@ -154,7 +154,7 @@ namespace NeoCortexApi.Experiments
             // It creates the instance of Spatial Pooler Multithreaded version.
             SpatialPooler sp = new SpatialPoolerMT(hpa);
 
-            // Initializes the 
+            // Initializes the
             sp.Init(mem);
 
             // Holds the indicies of active columns of the SDR.
