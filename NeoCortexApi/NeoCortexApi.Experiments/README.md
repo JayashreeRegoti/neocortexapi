@@ -15,15 +15,21 @@ Follow the below steps to run the experiment
 3.Open File SpatialSimililarityExperiment.cs
 
 4.Assign input images with parameters like image size, local area density value, potential radius value.
+
 5.Run Test Case SpatialSimilarityExperimentImageTest
+
 6.Image representations of non-zero input vector  and the resulting SDR is generated. Once you run the test case you can find this image vector in the following location
    \neocortexapi\NeoCortexApi\NeoCortexApi.Experiments\bin\Debug\net5.0\TestResults\SpatialSimilarityExperiment
+
 7.For reference generated input vectors can be found here
     https://github.com/JayashreeRegoti/neocortexapi/blob/JayashreeRegoti/NeoCortexApi/NeoCortexApi.Experiments/SpatialSimilarityIndividualProjectJayashreeRegoti/Input%20And%20Output%20Values/LocalAreaDensity%20%3D%200.pptx
+
 8.A comparison table of all images exhibiting spatial similarities can be found in the text explorer.
-9. Find the current comparison table (with different configuration paramters) and the graphical representation of the spatial similarity result in the below link : 
+
+9.Find the current comparison table (with different configuration paramters) and the graphical representation of the spatial similarity result in the below link : 
     https://github.com/JayashreeRegoti/neocortexapi/blob/JayashreeRegoti/NeoCortexApi/NeoCortexApi.Experiments/SpatialSimilarityIndividualProjectJayashreeRegoti/Input%20And%20Output%20Values/potentialIndipendent.xlsx
-10. Comparision table for individual parameters can be found via below link:
+
+10.Comparision table for individual parameters can be found via below link:
     https://github.com/JayashreeRegoti/neocortexapi/tree/JayashreeRegoti/NeoCortexApi/NeoCortexApi.Experiments/SpatialSimilarityIndividualProjectJayashreeRegoti/Input%20And%20Output%20Values
 
 
