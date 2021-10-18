@@ -9,8 +9,11 @@ https://github.com/JayashreeRegoti/neocortexapi/blob/JayashreeRegoti/NeoCortexAp
 Follow the below steps to run the experiment 
 
 1.Open NeoCortexAPI solution
+
 2.Browse to NeoCortexApi.Experiments folder
+
 3.Open File SpatialSimililarityExperiment.cs
+
 4.Assign input images with parameters like image size, local area density value, potential radius value.
 5.Run Test Case SpatialSimilarityExperimentImageTest
 6.Image representations of non-zero input vector  and the resulting SDR is generated. Once you run the test case you can find this image vector in the following location
