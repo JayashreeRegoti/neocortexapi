@@ -95,26 +95,37 @@ namespace NeoCortexApi.Experiments
             RunExperiment(cfg, encoder, inputValues);
         }
 
+
+
         [DataTestMethod]
         //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png", "pixel1_6.png", "pixel1_7.png", "pixel1_8.png", "pixel1_9.png", "pixel1_10.png" }, 15, 0.5, 0.2)]
         //[DataRow(new string[] { "slide_1_1.png", "slide_1_2.png", "slide_1_3.png", "slide_1_4.png", "slide_1_5.png"}, 15, 0.5, 0.2)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png" }, 15, 0.3)]//LocalAreaDensity = -1,//0.5,
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png", "pixel1_6.png", "pixel1_7.png", "pixel1_8.png", "pixel1_9.png", "pixel1_10.png" }, 15, 0.4)]
-        //[DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png" , "box1_13.png" , "box1_14.png" , "box1_15.png" , "box1_16.png", "box1_17.png" }, 15, 0.5, 0.45)]//LocalAreaDensity = -1,//0.5,
+        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png", "pixel1_6.png", "pixel1_7.png", "pixel1_8.png", "pixel1_9.png", "pixel1_10.png" }, 15, 0.5, 0.4)]
+        [DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png" , "box1_13.png" , "box1_14.png" , "box1_15.png" , "box1_16.png", "box1_17.png" }, 15, 0.5, 0.45)]//LocalAreaDensity = -1,//0.5,
+        [DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png", "box1_13.png", "box1_14.png", "box1_15.png", "box1_16.png", "box1_17.png" }, 15, 0.5, 0.35)]
+        [DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png", "box1_13.png", "box1_14.png", "box1_15.png", "box1_16.png", "box1_17.png" }, 15, 0.5, 0.25)]
+        [DataRow(new string[] { "box1_8.png", "box1_9.png", "box1_10.png", "box1_11.png", "box1_12.png", "box1_13.png", "box1_14.png", "box1_15.png", "box1_16.png", "box1_17.png" }, 15, 0.5, 0.2)]
 
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png" }, 15, 0.5, 0.45)]
-        [DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.5)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.4, 0.3)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.4)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png" }, 15, -1, 0.015)], "pixel2_4.png", "pixel2_5.png", "pixel2_6.png", "pixel2_7.png", "pixel2_8.png", "pixel2_9.png", "pixel2_10.png"
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.4, 0.3)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.5)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.48)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png", "pixel1_3.png", "pixel1_4.png", "pixel1_5.png" }, 10, 0.2, 0.12)]
-        //[DataRow(new string[] { "pixel1_1.png", "pixel1_2.png" }, 15, 0.2, 0.25)]
-        //[DataRow(new string[] { "box_2_1.png", "box_2_2.png", "box_2_3.png", "box_2_4.png" }, 15, 0.4)]
-        //[DataRow(new string[] { "box1_1.png", "box1_2.png", "box1_3.png", "box1_4.png", "box1_5.png" }, 10, 0.63, 0.23)]//PotentialRadius = (int)(0.15 * inputBits),
-        //[DataRow(new string[] { "face_1_8.png", "face_1_9.png", "face_1_10.png" }, 15, 0.3)]
+        // Initializing SpatialSimilarityExperimentImageTest
+        /// <summary>
+        /// This is the secondary public method of the NeoCortexApi.Experiments class. This function takes a input vector and outputs the comparision matrix.
+        /// If TRUE global inhibition algorithm will be used. If FALSE local inhibition algorithm will be used. 
+        /// </summary>
+        /// <param name="testImageFileNames">
+        /// Here black and white input images is being assigned, each images slightly varies with other.
+        /// </param>
+        /// </summary>
+        /// <param name="imageSize">
+        /// Here image dimension is asssigned (pixel value), as all the past images were square in shape, so one parameter is sufficient to assign the image size.
+        /// </param>
+        /// </summary>
+        /// <param name="localAreaDensityValue">
+        /// Density of active columns inside of local inhibition radius. If set on value < 0, explicit number of active columns (NUM_ACTIVE_COLUMNS_PER_INH_AREA) will be used.|
+        /// </param>
+        /// </summary>
+        /// <param name="potentialRadiusValue">
+        ///  Defines the radius in number of input cells visible to column cells. It is important to choose this value, so every input neuron is connected to at least a single column. For example, if the input has 50000 bits and the column topology is 500, then you must choose some value larger than 50000/500 > 100.  
+        /// </param>
         public void SpatialSimilarityExperimentImageTest(string[] testImageFileNames, int imageSize, double localAreaDensityValue, double potentialRadiusValue)
         {
 
@@ -181,6 +192,10 @@ namespace NeoCortexApi.Experiments
         /// <summary>
         /// Creates training vectors.
         /// </summary>
+        /// Once the images and parameters are assigned the next step is to run the test method. The primary thing the test does is to convert the input image to binary data. Below is the source code used for the same.
+        /// The 2D binary image is again converted into 1D training array.
+        /// Once the input image is converted to binary form then this binary is used to create a 1D training vector. For this we have considered experiment code to be 2, where it checks if the test image file name is null, or the image size is zero. 
+        /// If this condition is satisfied, then it returns to the list and checks for the next position until whole array is read. 
         /// <param name="experimentCode"></param>
         /// <param name="inputBits"></param>
         /// <returns></returns>
@@ -275,7 +290,13 @@ namespace NeoCortexApi.Experiments
 
         /// <summary>
         /// Implements the experiment.
-        /// </summary>
+        /// </summary>The first thing it does is to check whether the system has reached stable stage or not.
+        /// As next SpatialPooler creates the instance of Spatial Pooler Multithreaded version.
+        ///The HTM is initialized then instance of spatial pooler is initialized. Then it learns the compute of spatial pooler object.
+        ///Then it learns the compute of spatial pooler object then it gets overlap over every single column.
+        ///Here we boost calculated Overlaps.This is called Homeostatic Plasticity Mechanism
+        /// Get overlap over every single column
+        /// Once the overlap is done the system tries to learns all the necessary factors like AdaptSynapses, UpdateDutyCycles, BumpUpWeakColumns, UpdateBoostFactors, and once the enough rounds are passed it goes into stable state. 
         /// <param name="cfg"></param>
         /// <param name="encoder"></param>
         /// <param name="inputValues"></param>
@@ -383,7 +404,7 @@ namespace NeoCortexApi.Experiments
 
 
         /// <summary>
-        /// Draws all inputs and related SDRs. It also outputs the similarity matrix.
+        /// Draws all inputs and related SDRs. It also outputs the similarity matrix. It creates the matrix which finds similarity between each input image with other input images and well as itself. 
         /// </summary>
         /// <param name="cfg"></param>
         /// <param name="inputValues"></param>
@@ -457,7 +478,7 @@ namespace NeoCortexApi.Experiments
         }
 
         /// <summary>
-        /// Drwaws the input and the corresponding SDR.
+        /// Draws the input and the corresponding SDR.
         /// </summary>
         /// <param name="cfg"></param>
         /// <param name="inputKey"></param>
