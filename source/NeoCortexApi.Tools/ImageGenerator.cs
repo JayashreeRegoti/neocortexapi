@@ -4,19 +4,21 @@ namespace NeoCortexApi.Tools;
 
 public class ImageGenerator
 {
-    private static readonly string FolderPath = "./TestData";
+    private static readonly string FolderPath = "./ImageWithLines";
     public static async Task GenerateImage(string filePath, int width, int height, int[] data)
     {
         var bitmap = new SKBitmap(width, height);
 
-        for (int x = 0; x < width; x++)
+        for (int rowNumber = 0; rowNumber < width; rowNumber++)
         {
-            for (int y = 0; y < height; y++)
+            var rowOffset = rowNumber * (width - 1);
+            for (int columnNumber = 0; columnNumber < height; columnNumber++)
             {
-                bitmap.SetPixel(x, y, new SKColor(
-                    (byte)data[x + y + (x * width)], 
-                    (byte)data[x + y + (x * width)], 
-                    (byte)data[x + y + (x * width)]));
+                var value= data[rowNumber + columnNumber + rowOffset];
+                bitmap.SetPixel(columnNumber, rowNumber, new SKColor(
+                    (byte)value, 
+                    (byte)value, 
+                    (byte)value));
             }
         }
 
@@ -25,23 +27,98 @@ public class ImageGenerator
         skData.SaveTo(stream);
     }
 
-    public static async Task CreateHorizontalImage()
+    public static async Task CreateImageWithLines()
+    {
+        if(Directory.Exists(FolderPath))
+        {
+            Directory.Delete(FolderPath, true);
+        }
+        Directory.CreateDirectory(FolderPath);
+        
+        var imageWithLines = new Dictionary<string, ImageWithLine>
+        {
+            {
+                "HorizontalLine_1", new ImageWithLine
+                {
+                    Width = 100,
+                    Height = 100,
+                    LineThicknessInPercent = 5,
+                    LineLengthInPercent = 100,
+                    LineXAxisPositionInPercent = 50,
+                    LineYAxisPositionInPercent = 0
+                }
+            },
+            {
+                "HorizontalLine_2", new ImageWithLine
+                {
+                    Width = 100,
+                    Height = 100,
+                    LineThicknessInPercent = 5,
+                    LineLengthInPercent = 30,
+                    LineXAxisPositionInPercent = 50,
+                    LineYAxisPositionInPercent = 0
+                }
+            },
+            {
+                "HorizontalLine_3", new ImageWithLine
+                {
+                    Width = 100,
+                    Height = 100,
+                    LineThicknessInPercent = 5,
+                    LineLengthInPercent = 100,
+                    LineXAxisPositionInPercent = 10,
+                    LineYAxisPositionInPercent = 0
+                }
+            },
+            {
+                "VerticalLine", new ImageWithLine
+                {
+                    Width = 100,
+                    Height = 100,
+                    LineThicknessInPercent = 5,
+                    LineLengthInPercent = 100,
+                    LineXAxisPositionInPercent = 0,
+                    LineYAxisPositionInPercent = 50
+                }
+            },
+            {
+                "DiagonalLine", new ImageWithLine
+                {
+                    Width = 100,
+                    Height = 100,
+                    LineThicknessInPercent = 5,
+                    LineLengthInPercent = 100,
+                    LineXAxisPositionInPercent = 0,
+                    LineYAxisPositionInPercent = 0
+                }
+            }
+        };
+        
+        foreach (var (fileName, imageWithLine) in imageWithLines)
+        {
+            if (fileName.Contains("Horizontal"))
+            {
+                await CreateHorizontalImage(fileName, imageWithLine);
+            }
+        }
+    }
+
+    public static async Task CreateHorizontalImage(string fileName, ImageWithLine imageWithLine)
     {
         await Task.Yield();
-        var width = 100;
-        var height = 100;
+        var width = imageWithLine.Width;
+        var height = imageWithLine.Height;
 
-        var lineThicknessInPercent = 10;
-        var lineLengthInPercent = 100;
-        var lineXAxisPositionInPercent = 50;
-        var lineYAxisPositionInPercent = 0;
-        var jitterInPixel = 2;
+        var lineThicknessInPercent = imageWithLine.LineThicknessInPercent;
+        var lineLengthInPercent = imageWithLine.LineLengthInPercent;
+        var lineXAxisPositionInPercent = imageWithLine.LineXAxisPositionInPercent;
+        var lineYAxisPositionInPercent = imageWithLine.LineYAxisPositionInPercent;
         
-        var lineXAxisStartPosition = (lineXAxisPositionInPercent * width) / 100;
-        var lineXAxisEndPosition = (lineXAxisPositionInPercent + lineThicknessInPercent * width) / 100;
+        var lineXAxisStartPosition = (lineXAxisPositionInPercent * height) / 100;
+        var lineXAxisEndPosition = lineXAxisStartPosition + (lineThicknessInPercent * height) / 100;
         
-        var lineYAxisStartPosition = (lineYAxisPositionInPercent * height) / 100;
-        var lineYAxisEndPosition = (lineYAxisPositionInPercent + lineLengthInPercent * width) / 100;
+        var lineYAxisStartPosition = (lineYAxisPositionInPercent * width) / 100;
+        var lineYAxisEndPosition = lineYAxisStartPosition + (lineLengthInPercent * width) / 100;
         if(lineYAxisEndPosition > height)
         {
             lineYAxisEndPosition = height;
@@ -52,7 +129,7 @@ public class ImageGenerator
         {
             for (int j = 0; j < height; j++)
             {
-                var index = i + j + (i * width);
+                var index = i + j + (i * (width - 1));
                 data[index] =
                     lineXAxisStartPosition <= i &&
                     i <= lineXAxisEndPosition &&
@@ -60,9 +137,10 @@ public class ImageGenerator
                     j <= lineYAxisEndPosition
                         ? 255
                         : 0;
+                
             }
         }
         
-        await GenerateImage(Path.Combine(FolderPath, "HorizontalLine.png"), width, height, data);
+        await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
     }
 }
