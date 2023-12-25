@@ -27,71 +27,29 @@ public class ImageGenerator
         skData.SaveTo(stream);
     }
 
-    public static async Task CreateImageWithLines()
+    public static async Task CreateImageWithLines(int numberOfImages = 1)
     {
         if(Directory.Exists(FolderPath))
         {
             Directory.Delete(FolderPath, true);
         }
         Directory.CreateDirectory(FolderPath);
-        
-        var imageWithLines = new Dictionary<string, ImageWithLine>
+
+        var imageWithLines = new Dictionary<string, ImageWithLine>();
+
+        for (int i = 0; i < numberOfImages; i++)
         {
+            var fileName = $"HorizontalLine_{i}";
+            var random = new Random();
+            imageWithLines.Add(fileName, new ImageWithLine
             {
-                "HorizontalLine_1", new ImageWithLine
-                {
-                    Width = 100,
-                    Height = 100,
-                    LineThicknessInPercent = 5,
-                    LineLengthInPercent = 100,
-                    LineXAxisPositionInPercent = 50,
-                    LineYAxisPositionInPercent = 0
-                }
-            },
-            {
-                "HorizontalLine_2", new ImageWithLine
-                {
-                    Width = 100,
-                    Height = 100,
-                    LineThicknessInPercent = 5,
-                    LineLengthInPercent = 30,
-                    LineXAxisPositionInPercent = 50,
-                    LineYAxisPositionInPercent = 0
-                }
-            },
-            {
-                "HorizontalLine_3", new ImageWithLine
-                {
-                    Width = 100,
-                    Height = 100,
-                    LineThicknessInPercent = 5,
-                    LineLengthInPercent = 100,
-                    LineXAxisPositionInPercent = 10,
-                    LineYAxisPositionInPercent = 0
-                }
-            },
-            {
-                "VerticalLine", new ImageWithLine
-                {
-                    Width = 100,
-                    Height = 100,
-                    LineThicknessInPercent = 5,
-                    LineLengthInPercent = 100,
-                    LineXAxisPositionInPercent = 0,
-                    LineYAxisPositionInPercent = 50
-                }
-            },
-            {
-                "DiagonalLine", new ImageWithLine
-                {
-                    Width = 100,
-                    Height = 100,
-                    LineThicknessInPercent = 5,
-                    LineLengthInPercent = 100,
-                    LineXAxisPositionInPercent = 0,
-                    LineYAxisPositionInPercent = 0
-                }
-            }
+                Width = 100,
+                Height = 100,
+                LineThicknessInPercent = random.Next(1, 10),
+                LineLengthInPercent = random.Next(40, 100),
+                LineXAxisPositionInPercent = random.Next(1, 60),
+                LineYAxisPositionInPercent = random.Next(1, 60)
+            });
         };
         
         foreach (var (fileName, imageWithLine) in imageWithLines)
@@ -116,6 +74,10 @@ public class ImageGenerator
         
         var lineXAxisStartPosition = (lineXAxisPositionInPercent * height) / 100;
         var lineXAxisEndPosition = lineXAxisStartPosition + (lineThicknessInPercent * height) / 100;
+        if(lineXAxisEndPosition > width)
+        {
+            lineXAxisEndPosition = width;
+        }
         
         var lineYAxisStartPosition = (lineYAxisPositionInPercent * width) / 100;
         var lineYAxisEndPosition = lineYAxisStartPosition + (lineLengthInPercent * width) / 100;

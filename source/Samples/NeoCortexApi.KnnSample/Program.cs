@@ -8,5 +8,5 @@ await Run();
 async Task Run()
 {
     await Task.Yield();
-    await ImageGenerator.CreateImageWithLines();
+    await ImageGenerator.CreateImageWithLines(100);
 }
