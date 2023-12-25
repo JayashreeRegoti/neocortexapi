@@ -5,7 +5,8 @@ namespace NeoCortexApi.Tools;
 public class ImageGenerator
 {
     private static readonly string FolderPath = "./ImageWithLines";
-    public static async Task GenerateImage(string filePath, int width, int height, int[] data)
+
+    private static async Task GenerateImage(string filePath, int width, int height, int[] data)
     {
         var bitmap = new SKBitmap(width, height);
 
@@ -61,7 +62,7 @@ public class ImageGenerator
         }
     }
 
-    public static async Task CreateHorizontalImage(string fileName, ImageWithLine imageWithLine)
+    private static async Task CreateHorizontalImage(string fileName, ImageWithLine imageWithLine)
     {
         await Task.Yield();
         var width = imageWithLine.Width;
@@ -99,7 +100,6 @@ public class ImageGenerator
                     j <= lineYAxisEndPosition
                         ? 255
                         : 0;
-                
             }
         }
         
