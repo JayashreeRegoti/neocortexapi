@@ -1,11 +1,18 @@
-﻿using SkiaSharp;
+﻿using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace NeoCortexApi.Tools;
 
 public class ImageGenerator
 {
     private static readonly string FolderPath = "./ImageWithLines";
+    private readonly ILogger<ImageGenerator> _logger;
 
+    public ImageGenerator(ILogger<ImageGenerator> logger)
+    {
+        _logger = logger;
+    }
+    
     private static async Task GenerateImage(string filePath, int width, int height, int[][] data)
     {
         var bitmap = new SKBitmap(width, height);
@@ -30,7 +37,7 @@ public class ImageGenerator
         skData.SaveTo(stream);
     }
 
-    public static async Task CreateImageWithLines(int numberOfImages = 1)
+    public async Task CreateImagesWithLine(int numberOfImages = 1)
     {
         if(Directory.Exists(FolderPath))
         {
@@ -65,7 +72,7 @@ public class ImageGenerator
         }
     }
 
-    private static async Task CreateHorizontalImage(string fileName, ImageWithLine imageWithLine)
+    private async Task CreateHorizontalImage(string fileName, ImageWithLine imageWithLine)
     {
         await Task.Yield();
         var width = imageWithLine.Width;
@@ -108,7 +115,7 @@ public class ImageGenerator
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"Exception: {e.Message}, i: {i}, j: {j}");
+                        _logger.LogError(e, "jitter array - i: {I}, j: {J}", i, j);
                         throw;
                     }
                     
@@ -154,7 +161,7 @@ public class ImageGenerator
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Exception: {e.Message}, newRowIndex: {newRowIndex}, columnNumber: {columnNumber}");
+                    _logger.LogError(e, "data array - newRowIndex: {NewRowIndex}, columnNumber: {ColumnNumber}", newRowIndex, columnNumber);
                     throw;
                 }
                 
