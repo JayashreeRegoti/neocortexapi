@@ -47,9 +47,24 @@ public class ImageGenerator
 
         var imageWithLines = new Dictionary<string, ImageWithLine>();
 
-        for (int i = 0; i < numberOfImages; i++)
+        for (int i = 0; i < numberOfImages/2; i++)
         {
             var fileName = $"HorizontalLine_{i}";
+            var random = new Random();
+            imageWithLines.Add(fileName, new ImageWithLine
+            {
+                Width = 500,
+                Height = 500,
+                LineThicknessInPercent = random.Next(1, 10),
+                RowPositionInPercent = random.Next(1, 60),
+                ColumnPositionInPercent = random.Next(1, 60),
+                LineLengthInPercent = random.Next(40, 100),
+                useJitter = random.Next(0, 2) == 1
+            });
+        };
+        for (int i = 0; i < numberOfImages/2; i++)
+        {
+            var fileName = $"VerticalLine_{i}";
             var random = new Random();
             imageWithLines.Add(fileName, new ImageWithLine
             {
@@ -67,12 +82,16 @@ public class ImageGenerator
         {
             if (fileName.Contains("Horizontal"))
             {
-                await CreateHorizontalImage(fileName, imageWithLine);
+                await CreateHorizontalLineImage(fileName, imageWithLine);
+            }
+            if (fileName.Contains("Vertical"))
+            {
+                await CreateVerticalLineImage(fileName, imageWithLine);
             }
         }
     }
 
-    private async Task CreateHorizontalImage(string fileName, ImageWithLine imageWithLine)
+    private async Task CreateHorizontalLineImage(string fileName, ImageWithLine imageWithLine)
     {
         await Task.Yield();
         var width = imageWithLine.Width;
@@ -162,6 +181,106 @@ public class ImageGenerator
                 catch (Exception e)
                 {
                     _logger.LogError(e, "data array - newRowIndex: {NewRowIndex}, columnNumber: {ColumnNumber}", newRowIndex, columnNumber);
+                    throw;
+                }
+                
+            }
+        }
+
+        await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
+    }
+    
+    private async Task CreateVerticalLineImage(string fileName, ImageWithLine imageWithLine)
+    {
+        await Task.Yield();
+        var width = imageWithLine.Width;
+        var height = imageWithLine.Height;
+
+        var lineThicknessInPercent = imageWithLine.LineThicknessInPercent;
+        var lineLengthInPercent = imageWithLine.LineLengthInPercent;
+        var rowPositionInPercent = imageWithLine.RowPositionInPercent;
+        var columnPositionInPercent = imageWithLine.ColumnPositionInPercent;
+        var useJitter = imageWithLine.useJitter;
+        
+        var rowStartPosition = (rowPositionInPercent * height) / 100;
+        var rowEndPosition = rowStartPosition + (lineLengthInPercent * height) / 100;
+        if(rowEndPosition > height)
+        {
+            rowEndPosition = height;
+        }
+        
+        var columnStartPosition = (columnPositionInPercent * width) / 100;
+        var columnEndPosition = columnStartPosition + (lineThicknessInPercent * width) / 100;
+        if(columnEndPosition > width)
+        {
+            columnEndPosition = width;
+        }
+        
+        var jitterWidth = (columnEndPosition - columnStartPosition) / 3;
+
+        var jitterHeight = height / 10;
+        var performJitter = new bool[height];
+        if(useJitter)
+        {
+            
+            for (int i = 0; i < width; i += jitterHeight)
+            {
+                var doJitter = (new Random()).Next(0, 2) == 1;
+                for (int j = 0; j < jitterHeight; j++)
+                {
+                    try
+                    {
+                        performJitter[i + j] = doJitter;
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "jitter array - i: {I}, j: {J}", i, j);
+                        throw;
+                    }
+                    
+                }
+            }
+        }
+        
+        var data = new int [height][];
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
+        {
+            data[rowNumber] = new int[width];
+        }
+        
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
+        {
+            for (int columnNumber = 0; columnNumber < width; columnNumber++)
+            {
+                var value = 
+                    rowStartPosition <= rowNumber &&
+                    rowNumber <= rowEndPosition &&
+                    columnStartPosition <= columnNumber &&
+                    columnNumber <= columnEndPosition
+                        ? 255
+                        : 0;
+
+                var newColumnNumber = columnNumber;
+                if (performJitter[rowNumber])
+                {
+                    newColumnNumber = rowNumber + jitterHeight;
+                    if (newColumnNumber >= width)
+                    {
+                        newColumnNumber = width - 1;
+                    }
+                    else if (newColumnNumber < 0)
+                    {
+                        newColumnNumber = 0;
+                    }
+                }
+
+                try
+                {
+                    data[rowNumber][newColumnNumber] = value;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "data array - rowNumber: {RowNumber}, newColumnNumber: {NewColumnNumber}", rowNumber, newColumnNumber);
                     throw;
                 }
                 
