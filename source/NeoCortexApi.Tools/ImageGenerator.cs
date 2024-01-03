@@ -47,10 +47,17 @@ public class ImageGenerator
 
         var imageWithLines = new Dictionary<string, ImageWithLine>();
 
-        for (int i = 0; i < numberOfImages/2; i++)
+        for (int i = 0; i < numberOfImages; i++)
         {
-            var fileName = $"HorizontalLine_{i}";
             var random = new Random();
+
+            var fileName = random.Next(0, 2) switch
+            {
+                0 => $"HorizontalLine_{i}",
+                1 => $"VerticalLine_{i}",
+                _ => $"HorizontalLine_{i}"
+            };
+
             imageWithLines.Add(fileName, new ImageWithLine
             {
                 Width = 500,
@@ -61,24 +68,9 @@ public class ImageGenerator
                 LineLengthInPercent = random.Next(40, 100),
                 useJitter = random.Next(0, 2) == 1
             });
-        };
-        for (int i = 0; i < numberOfImages/2; i++)
-        {
-            var fileName = $"VerticalLine_{i}";
-            var random = new Random();
-            imageWithLines.Add(fileName, new ImageWithLine
-            {
-                Width = 500,
-                Height = 500,
-                LineThicknessInPercent = random.Next(1, 10),
-                RowPositionInPercent = random.Next(1, 60),
-                ColumnPositionInPercent = random.Next(1, 60),
-                LineLengthInPercent = random.Next(40, 100),
-                useJitter = random.Next(0, 2) == 1
-            });
-        };
+        }
         
-        foreach (var (fileName, imageWithLine) in imageWithLines)
+        foreach ((string fileName, ImageWithLine imageWithLine) in imageWithLines)
         {
             if (fileName.Contains("Horizontal"))
             {
