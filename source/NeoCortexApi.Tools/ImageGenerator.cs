@@ -10,12 +10,15 @@ public class ImageGenerator
     {
         var bitmap = new SKBitmap(width, height);
 
-        for (int rowNumber = 0; rowNumber < width; rowNumber++)
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
         {
-            for (int columnNumber = 0; columnNumber < height; columnNumber++)
+            for (int columnNumber = 0; columnNumber < width; columnNumber++)
             {
                 var value= data[rowNumber][columnNumber];
-                bitmap.SetPixel(columnNumber, rowNumber, new SKColor(
+                
+                // x-axis is columnNumber
+                // y-axis is rowNumber
+                bitmap.SetPixel(columnNumber, rowNumber , new SKColor(
                     (byte)value, 
                     (byte)value, 
                     (byte)value));
@@ -46,8 +49,8 @@ public class ImageGenerator
                 Width = 500,
                 Height = 500,
                 LineThicknessInPercent = random.Next(1, 10),
-                LineXAxisPositionInPercent = random.Next(1, 60),
-                LineYAxisPositionInPercent = random.Next(1, 60),
+                RowPositionInPercent = random.Next(1, 60),
+                ColumnPositionInPercent = random.Next(1, 60),
                 LineLengthInPercent = random.Next(40, 100),
                 useJitter = random.Next(0, 2) == 1
             });
@@ -70,70 +73,91 @@ public class ImageGenerator
 
         var lineThicknessInPercent = imageWithLine.LineThicknessInPercent;
         var lineLengthInPercent = imageWithLine.LineLengthInPercent;
-        var lineXAxisPositionInPercent = imageWithLine.LineXAxisPositionInPercent;
-        var lineYAxisPositionInPercent = imageWithLine.LineYAxisPositionInPercent;
+        var rowPositionInPercent = imageWithLine.RowPositionInPercent;
+        var columnPositionInPercent = imageWithLine.ColumnPositionInPercent;
         var useJitter = imageWithLine.useJitter;
         
-        var lineXAxisStartPosition = (lineXAxisPositionInPercent * height) / 100;
-        var lineXAxisEndPosition = lineXAxisStartPosition + (lineThicknessInPercent * height) / 100;
-        if(lineXAxisEndPosition > width)
+        var rowStartPosition = (rowPositionInPercent * height) / 100;
+        var rowEndPosition = rowStartPosition + (lineThicknessInPercent * height) / 100;
+        if(rowEndPosition > height)
         {
-            lineXAxisEndPosition = width;
+            rowEndPosition = height;
         }
+        var jitterHeight = (rowEndPosition - rowStartPosition) / 3;
         
-        var lineYAxisStartPosition = (lineYAxisPositionInPercent * width) / 100;
-        var lineYAxisEndPosition = lineYAxisStartPosition + (lineLengthInPercent * width) / 100;
-        if(lineYAxisEndPosition > height)
+        var columnStartPosition = (columnPositionInPercent * width) / 100;
+        var columnEndPosition = columnStartPosition + (lineLengthInPercent * width) / 100;
+        if(columnEndPosition > width)
         {
-            lineYAxisEndPosition = height;
+            columnEndPosition = width;
         }
 
-        var jitterValues = new bool[height];
+        var jitterWidth = width / 10;
+        var performJitter = new bool[width];
         if(useJitter)
         {
-            var batchSize = 10;
-            for (int i = 0; i < height; i += batchSize)
+            
+            for (int i = 0; i < width; i += jitterWidth)
             {
-                var performJitter = (new Random()).Next(0, 2) == 1;
-                for (int j = 0; j < batchSize; j++)
+                var doJitter = (new Random()).Next(0, 2) == 1;
+                for (int j = 0; j < jitterWidth; j++)
                 {
-                    jitterValues[i + j] = performJitter;
+                    try
+                    {
+                        performJitter[i + j] = doJitter;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Exception: {e.Message}, i: {i}, j: {j}");
+                        throw;
+                    }
+                    
                 }
             }
         }
         
-        var data = new int [width][];
-        for (int i = 0; i < width; i++)
+        var data = new int [height][];
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
         {
-            data[i] = new int[height];
+            data[rowNumber] = new int[width];
         }
         
-        for (int i = 0; i < width; i++)
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
         {
-            for (int j = 0; j < height; j++)
+            for (int columnNumber = 0; columnNumber < width; columnNumber++)
             {
                 var value = 
-                    lineXAxisStartPosition <= i &&
-                    i <= lineXAxisEndPosition &&
-                    lineYAxisStartPosition <= j &&
-                    j <= lineYAxisEndPosition
+                    rowStartPosition <= rowNumber &&
+                    rowNumber <= rowEndPosition &&
+                    columnStartPosition <= columnNumber &&
+                    columnNumber <= columnEndPosition
                         ? 255
                         : 0;
 
-                var jitterValue = 0;
-                if (value == 255 && jitterValues[j])
+                var newRowIndex = rowNumber;
+                if (performJitter[columnNumber])
                 {
-                    if (i % 15 == 0)
+                    newRowIndex = rowNumber + jitterHeight;
+                    if (newRowIndex >= height)
                     {
-                        jitterValue = lineXAxisEndPosition - lineXAxisStartPosition;
+                        newRowIndex = height - 1;
                     }
-                    if (i % 30 == 0)
+                    else if (newRowIndex < 0)
                     {
-                        jitterValue = lineXAxisStartPosition - lineXAxisEndPosition;
+                        newRowIndex = 0;
                     }
                 }
+
+                try
+                {
+                    data[newRowIndex][columnNumber] = value;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Exception: {e.Message}, newRowIndex: {newRowIndex}, columnNumber: {columnNumber}");
+                    throw;
+                }
                 
-                data[i + jitterValue][j] = value;
             }
         }
 

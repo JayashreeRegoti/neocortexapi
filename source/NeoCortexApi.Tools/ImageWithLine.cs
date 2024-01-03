@@ -6,8 +6,8 @@ namespace NeoCortexApi.Tools
         public int Height { get; set; }
         public int LineThicknessInPercent { get; set; }
         public int LineLengthInPercent { get; set; }
-        public int LineXAxisPositionInPercent { get; set; }
-        public int LineYAxisPositionInPercent { get; set; }
+        public int RowPositionInPercent { get; set; }
+        public int ColumnPositionInPercent { get; set; }
         public bool useJitter { get; set; }
     }
 }
