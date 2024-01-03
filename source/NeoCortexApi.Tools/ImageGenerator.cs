@@ -160,27 +160,27 @@ public class ImageGenerator
                         ? 255
                         : 0;
 
-                var newRowIndex = rowNumber;
+                var newRowNumber = rowNumber;
                 if (performJitter[columnNumber])
                 {
-                    newRowIndex = rowNumber + jitterHeight;
-                    if (newRowIndex >= height)
+                    newRowNumber = rowNumber + jitterHeight;
+                    if (newRowNumber >= height)
                     {
-                        newRowIndex = height - 1;
+                        newRowNumber = height - 1;
                     }
-                    else if (newRowIndex < 0)
+                    else if (newRowNumber < 0)
                     {
-                        newRowIndex = 0;
+                        newRowNumber = 0;
                     }
                 }
 
                 try
                 {
-                    data[newRowIndex][columnNumber] = value;
+                    data[newRowNumber][columnNumber] = value;
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "data array - newRowIndex: {NewRowIndex}, columnNumber: {ColumnNumber}", newRowIndex, columnNumber);
+                    _logger.LogError(e, "data array - newRowNumber: {NewRowNumber}, columnNumber: {ColumnNumber}", newRowNumber, columnNumber);
                     throw;
                 }
                 
@@ -263,7 +263,7 @@ public class ImageGenerator
                 var newColumnNumber = columnNumber;
                 if (performJitter[rowNumber])
                 {
-                    newColumnNumber = rowNumber + jitterHeight;
+                    newColumnNumber = columnNumber + jitterWidth;
                     if (newColumnNumber >= width)
                     {
                         newColumnNumber = width - 1;
