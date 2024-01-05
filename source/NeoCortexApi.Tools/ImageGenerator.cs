@@ -51,11 +51,11 @@ public class ImageGenerator
         {
             var random = new Random();
 
-            var fileName = random.Next(0, 2) switch
+            var fileName = random.Next(0, 3) switch
             {
                 0 => $"HorizontalLine_{i}",
                 1 => $"VerticalLine_{i}",
-                _ => $"HorizontalLine_{i}"
+                _ => $"DiagonalLine_{i}"
             };
 
             imageWithLines.Add(fileName, new ImageWithLine
@@ -76,9 +76,13 @@ public class ImageGenerator
             {
                 await CreateHorizontalLineImage(fileName, imageWithLine);
             }
-            if (fileName.Contains("Vertical"))
+            else if (fileName.Contains("Vertical"))
             {
                 await CreateVerticalLineImage(fileName, imageWithLine);
+            }
+            else if (fileName.Contains("Diagonal"))
+            {
+                await CreateDiagonalLineImage(fileName, imageWithLine);
             }
         }
     }
@@ -281,4 +285,107 @@ public class ImageGenerator
 
         await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
     }
+    
+    private async Task CreateDiagonalLineImage(string fileName, ImageWithLine imageWithLine)
+    {
+        await Task.Yield();
+        var width = imageWithLine.Width;
+        var height = imageWithLine.Height;
+
+        var lineThicknessInPercent = imageWithLine.LineThicknessInPercent;
+        var lineLengthInPercent = imageWithLine.LineLengthInPercent;
+        var rowPositionInPercent = imageWithLine.RowPositionInPercent;
+        var columnPositionInPercent = imageWithLine.ColumnPositionInPercent;
+        var useJitter = imageWithLine.useJitter;
+        
+        var rowStartPosition = (rowPositionInPercent * height) / 100;
+        var lineLength = (lineLengthInPercent * width) / 100;
+        var lineThickness = (lineThicknessInPercent * height) / 100;
+        var rowEndPosition = rowStartPosition + lineLength;
+        if(rowEndPosition > height)
+        {
+            rowEndPosition = height;
+        }
+        var jitterHeight = lineThickness / 3;
+        
+        var columnStartPosition = (columnPositionInPercent * width) / 100;
+        var columnEndPosition = columnStartPosition + lineLength;
+        if(columnEndPosition > width)
+        {
+            columnEndPosition = width;
+        }
+
+        var jitterWidth = width / 10;
+        var performJitter = new bool[width];
+        if(useJitter)
+        {
+            
+            for (int i = 0; i < width; i += jitterWidth)
+            {
+                var doJitter = (new Random()).Next(0, 2) == 1;
+                for (int j = 0; j < jitterWidth; j++)
+                {
+                    try
+                    {
+                        performJitter[i + j] = doJitter;
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "jitter array - i: {I}, j: {J}", i, j);
+                        throw;
+                    }
+                    
+                }
+            }
+        }
+        
+        var data = new int [height][];
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
+        {
+            data[rowNumber] = new int[width];
+        }
+        
+        for (int rowNumber = 0; rowNumber < height; rowNumber++)
+        {
+            for (int columnNumber = 0; columnNumber < width; columnNumber++)
+            {
+                var value = 
+                    rowStartPosition <= rowNumber &&
+                    rowNumber <= rowEndPosition &&
+                    columnStartPosition <= columnNumber &&
+                    columnNumber <= columnEndPosition &&
+                    Math.Abs(rowNumber - columnNumber) < lineThickness
+                        ? 255
+                        : 0;
+
+                var newRowNumber = rowNumber;
+                if (performJitter[columnNumber])
+                {
+                    newRowNumber = rowNumber + jitterHeight;
+                    if (newRowNumber >= height)
+                    {
+                        newRowNumber = height - 1;
+                    }
+                    else if (newRowNumber < 0)
+                    {
+                        newRowNumber = 0;
+                    }
+                }
+
+                try
+                {
+                    data[newRowNumber][columnNumber] = value;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "data array - newRowNumber: {NewRowNumber}, columnNumber: {ColumnNumber}", newRowNumber, columnNumber);
+                    throw;
+                }
+                
+            }
+        }
+
+        await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
+    }
+    
 }
