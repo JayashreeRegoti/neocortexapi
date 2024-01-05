@@ -5,7 +5,6 @@ namespace NeoCortexApi.Tools;
 
 public class ImageGenerator
 {
-    private static readonly string FolderPath = "./ImageWithLines";
     private readonly ILogger<ImageGenerator> _logger;
 
     public ImageGenerator(ILogger<ImageGenerator> logger)
@@ -37,13 +36,13 @@ public class ImageGenerator
         skData.SaveTo(stream);
     }
 
-    public async Task CreateImagesWithLine(int numberOfImages = 1)
+    public async Task CreateImagesWithLine(string folderPath, int numberOfImages = 1)
     {
-        if(Directory.Exists(FolderPath))
+        if(Directory.Exists(folderPath))
         {
-            Directory.Delete(FolderPath, true);
+            Directory.Delete(folderPath, true);
         }
-        Directory.CreateDirectory(FolderPath);
+        Directory.CreateDirectory(folderPath);
 
         var imageWithLines = new Dictionary<string, ImageWithLine>();
 
@@ -58,7 +57,9 @@ public class ImageGenerator
                 _ => $"DiagonalLine_{i}"
             };
 
-            imageWithLines.Add(fileName, new ImageWithLine
+            var filePath = Path.Combine(folderPath, $"{fileName}.png");
+
+            imageWithLines.Add(filePath, new ImageWithLine
             {
                 Width = 500,
                 Height = 500,
@@ -70,25 +71,25 @@ public class ImageGenerator
             });
         }
         
-        foreach ((string fileName, ImageWithLine imageWithLine) in imageWithLines)
+        foreach ((string filePath, ImageWithLine imageWithLine) in imageWithLines)
         {
-            _logger.LogInformation("Creating image {FileName}", fileName);
-            if (fileName.Contains("Horizontal"))
+            _logger.LogInformation("Creating image {FileName}", filePath);
+            if (filePath.Contains("Horizontal"))
             {
-                await CreateHorizontalLineImage(fileName, imageWithLine);
+                await CreateHorizontalLineImage(filePath, imageWithLine);
             }
-            else if (fileName.Contains("Vertical"))
+            else if (filePath.Contains("Vertical"))
             {
-                await CreateVerticalLineImage(fileName, imageWithLine);
+                await CreateVerticalLineImage(filePath, imageWithLine);
             }
-            else if (fileName.Contains("Diagonal"))
+            else if (filePath.Contains("Diagonal"))
             {
-                await CreateDiagonalLineImage(fileName, imageWithLine);
+                await CreateDiagonalLineImage(filePath, imageWithLine);
             }
         }
     }
 
-    private async Task CreateHorizontalLineImage(string fileName, ImageWithLine imageWithLine)
+    private async Task CreateHorizontalLineImage(string filePath, ImageWithLine imageWithLine)
     {
         await Task.Yield();
         var width = imageWithLine.Width;
@@ -184,10 +185,10 @@ public class ImageGenerator
             }
         }
 
-        await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
+        await GenerateImage(filePath, width, height, data);
     }
     
-    private async Task CreateVerticalLineImage(string fileName, ImageWithLine imageWithLine)
+    private async Task CreateVerticalLineImage(string filePath, ImageWithLine imageWithLine)
     {
         await Task.Yield();
         var width = imageWithLine.Width;
@@ -284,10 +285,10 @@ public class ImageGenerator
             }
         }
 
-        await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
+        await GenerateImage(filePath, width, height, data);
     }
     
-    private async Task CreateDiagonalLineImage(string fileName, ImageWithLine imageWithLine)
+    private async Task CreateDiagonalLineImage(string filePath, ImageWithLine imageWithLine)
     {
         await Task.Yield();
         var width = imageWithLine.Width;
@@ -386,7 +387,7 @@ public class ImageGenerator
             }
         }
 
-        await GenerateImage(Path.Combine(FolderPath, $"{fileName}.png"), width, height, data);
+        await GenerateImage(filePath, width, height, data);
     }
     
 }
