@@ -72,6 +72,7 @@ public class ImageGenerator
         
         foreach ((string fileName, ImageWithLine imageWithLine) in imageWithLines)
         {
+            _logger.LogInformation("Creating image {FileName}", fileName);
             if (fileName.Contains("Horizontal"))
             {
                 await CreateHorizontalLineImage(fileName, imageWithLine);

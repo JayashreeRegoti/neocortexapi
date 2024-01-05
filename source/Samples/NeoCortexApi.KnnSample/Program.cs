@@ -11,6 +11,6 @@ var host = builder.Build();
 Console.WriteLine("Creating image with lines...");
 
 var imageGenerator = host.Services.GetRequiredService<ImageGenerator>();
-await imageGenerator.CreateImagesWithLine(100);
+await imageGenerator.CreateImagesWithLine(300);
 
 Console.WriteLine("Completed Creating image with lines.");
