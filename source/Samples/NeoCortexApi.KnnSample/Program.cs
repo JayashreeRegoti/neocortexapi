@@ -2,20 +2,32 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NeoCortexApi.KnnSample;
 using NeoCortexApi.Tools;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddTransient<ImageGenerator>();
+builder.Services.AddTransient<KnnClassifierFactory>();
 var host = builder.Build();
 
-Console.WriteLine("Creating image with lines...");
-
-var imageGenerator = host.Services.GetRequiredService<ImageGenerator>();
-
-var testDataFolderPath = "./TestData";
-await imageGenerator.CreateImagesWithLine(testDataFolderPath, 30);
-
 var trainingDataFolderPath = "./TrainingData";
-await imageGenerator.CreateImagesWithLine(trainingDataFolderPath, 300);
+var testDataFolderPath = "./TestData";
 
-Console.WriteLine("Completed Creating image with lines.");
+await CreateInputDataSet(host.Services, trainingDataFolderPath, testDataFolderPath);
+
+var knnClassifierFactory = host.Services.GetRequiredService<KnnClassifierFactory>();
+// var classifier = await knnClassifierFactory.GetTrainModel(trainingDataFolderPath);
+
+return;
+
+
+async Task CreateInputDataSet(IServiceProvider services, string trainingDataFolderPath, string testDataFolderPath)
+{
+    Console.WriteLine("Creating image with lines...");
+    var imageGenerator = services.GetRequiredService<ImageGenerator>();
+
+    await imageGenerator.CreateImagesWithLine(testDataFolderPath, 30);
+    await imageGenerator.CreateImagesWithLine(trainingDataFolderPath, 300);
+    
+    Console.WriteLine("Completed Creating image with lines.");
+}
