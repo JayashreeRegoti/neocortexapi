@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using NeoCortexApi.Classifiers;
 using NeoCortexApi.Entities;
 using NeoCortexEntities.NeuroVisualizer;
@@ -7,58 +9,87 @@ namespace NeoCortexApi.KnnSample
 {
     public class KnnClassifierFactory
     {
+        private readonly ILogger<KnnClassifierFactory> _logger;
 
-        internal async Task<KNeighborsClassifier<string, ComputeCycle>> GetTrainModel(string trainingDataFolderPath)
+        public KnnClassifierFactory(ILogger<KnnClassifierFactory> logger)
+        {
+            _logger = logger;
+        }
+
+        internal async Task<Predictor> CreatePredictor(string trainingDataFolderPath)
         {
             await Task.Yield();
-            var knnClassifier = new KNeighborsClassifier<string, ComputeCycle>();
-            var sequences = new Dictionary<string, List<double>>();
-            sequences.Add("S1", new List<double>(new double[] { 0.0, 1.0, 2.0, 3.0, 4.0, 2.0, 5.0 }));
 
-            var trainingData = GetTrainingData(trainingDataFolderPath);
+            var trainingData = this.GetDataSet(trainingDataFolderPath);
+
+            var sequences = trainingData.GroupBy(x => x.Key)
+                .ToDictionary(trainingEntry => trainingEntry.Key,
+                trainingEntry => trainingEntry.Select(x => x.Value).ToList());
 
             Console.WriteLine("Training model...");
 
-            int maxCycles = 60;
+            var sw = new Stopwatch();
+            sw.Start();
 
-            foreach (var sequenceKeyPair in sequences)
+            var predictor = new MultiSequenceLearning().Run(sequences);
+            sw.Stop();
+            _logger.LogInformation("Training model took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
+            return predictor;
+        }
+        
+        internal async Task ValidateTestData(string testDataFolderPath, Predictor predictor)
+        {
+            await Task.Yield();
+            var testData = GetDataSet(testDataFolderPath);
+
+            Console.WriteLine("Validating model...");
+
+            var sw = new Stopwatch();
+            sw.Start();
+
+            foreach (var testImage in testData)
             {
-                int maxPrevInputs = sequenceKeyPair.Value.Count - 1;
-
-                List<string> previousInputs = new List<string>();
-
-                previousInputs.Add("-1.0");
-
-                // Now training with SP+TM. SP is pretrained on the given input pattern set.
-                for (int i = 0; i < maxCycles; i++)
+                var image = SKBitmap.Decode(testImage.Key);
+                var imageBinary = new int[image.Width][];
+                for (int x = 0; x < image.Width; x++)
                 {
-                    foreach (var input in sequenceKeyPair.Value)
+                    imageBinary[x] = new int[image.Height];
+                    for (int y = 0; y < image.Height; y++)
                     {
-                        previousInputs.Add(input.ToString());
-                        if (previousInputs.Count > maxPrevInputs + 1)
-                            previousInputs.RemoveAt(0);
-
-                        /* In the pretrained SP with HPC, the TM will quickly learn cells for patterns
-                        In that case the starting sequence 4-5-6 might have the sam SDR as 1-2-3-4-5-6,
-                        Which will result in returning of 4-5-6 instead of 1-2-3-4-5-6.
-                        knnClassifier allways return the first matching sequence. Because 4-5-6 will be as first
-                        memorized, it will match as the first one. */
-                        if (previousInputs.Count < maxPrevInputs)
-                            continue;
-
-                        string key = GetKey(previousInputs, input, sequenceKeyPair.Key);
-                        List<Cell> actCells = GetMockCells(CellActivity.ActiveCell);
-                        knnClassifier.Learn(key, actCells.ToArray());
+                        var pixel = image.GetPixel(x, y);
+                        var red = pixel.Red;
+                        var green = pixel.Green;
+                        var blue = pixel.Blue;
+                        if (red > 128 && green > 128 && blue > 128)
+                        {
+                            imageBinary[x][y] = 1;
+                        }
+                        else
+                        {
+                            imageBinary[x][y] = 0;
+                        }
                     }
                 }
+
+                
+                var predictedValue = predictor.Predict(imageBinary.SelectMany(x => x).ToArray());
+                var predictedSequence = predictedValue.First().PredictedInput.Split('_')[0];
+                var actualSequence = Path.GetFileNameWithoutExtension(testImage.Key);
+                if (predictedSequence != actualSequence)
+                {
+                    _logger.LogInformation("Predicted sequence: {PredictedSequence}, Actual sequence: {ActualSequence}", predictedSequence,
+                        actualSequence);
+                }
             }
-            return knnClassifier;
+
+            sw.Stop();
+            _logger.LogInformation("Validating model took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
         }
 
-        private List<KeyValuePair<string, int[]>> GetTrainingData(string trainingDataFolderPath)
+        private List<KeyValuePair<string, int[]>> GetDataSet(string dataSetFolderPath)
         {
             var trainingImages = new List<KeyValuePair<string, int[][]>>();
-            var trainingFilePaths = Directory.EnumerateFiles(trainingDataFolderPath, "*.png", SearchOption.TopDirectoryOnly).ToList();
+            var trainingFilePaths = Directory.EnumerateFiles(dataSetFolderPath, "*.png", SearchOption.TopDirectoryOnly).ToList();
             foreach (string trainingFilePath in trainingFilePaths)
             {
                 var image = SKBitmap.Decode(trainingFilePath);
