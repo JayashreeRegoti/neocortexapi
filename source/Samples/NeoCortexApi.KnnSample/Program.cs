@@ -2,6 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NeoCortexApi.KnnSample;
 using NeoCortexApi.Tools;
 using Serilog;
@@ -10,13 +11,11 @@ var builder = Host.CreateApplicationBuilder(args);
 
 var logger = new LoggerConfiguration()
     .MinimumLevel.Information()
-    .WriteTo.Console(outputTemplate: "{Timestamp:HH:mm:ss} {Level:u4}: {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Console()
     .CreateLogger();
 
+builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
-builder.Services.AddSingleton<ILogger>(sp => new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .CreateLogger());
 
 builder.Services.AddTransient<ImageGenerator>();
 builder.Services.AddTransient<KnnClassifierFactory>();
