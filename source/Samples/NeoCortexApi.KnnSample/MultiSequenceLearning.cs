@@ -17,11 +17,13 @@ namespace NeoCortexApi.KnnSample
         {
             _logger = logger;
         }
+
         /// <summary>
         /// Runs the learning of sequences.
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sewuence name, the VALUE is th elist of element of the sequence.</param>
-        public Predictor Run(Dictionary<string, List<string>> sequences)
+        /// <param name="imageEncoderSettings"></param>
+        public Predictor Run(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
         {
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
@@ -70,14 +72,7 @@ namespace NeoCortexApi.KnnSample
                 { "MaxVal", max}
             };
 
-            var imageEncoderSettings = new BinarizerParams()
-            {
-                ImageHeight = 30,
-                ImageWidth = 30,
-                RedThreshold = 128,
-                GreenThreshold = 128,
-                BlueThreshold = 128,
-            };
+            
             var encoder = new ImageEncoder(imageEncoderSettings);
             #endregion
             

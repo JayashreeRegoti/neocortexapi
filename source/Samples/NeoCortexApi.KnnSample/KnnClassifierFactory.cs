@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Daenet.ImageBinarizerLib.Entities;
 using Microsoft.Extensions.Logging;
 using NeoCortexApi.Classifiers;
 using NeoCortexApi.Entities;
@@ -18,7 +19,7 @@ namespace NeoCortexApi.KnnSample
             _multiSequenceLearning = multiSequenceLearning;
         }
 
-        internal async Task<Predictor> CreatePredictor(string trainingDataFolderPath)
+        internal async Task<Predictor> CreatePredictor(string trainingDataFolderPath, BinarizerParams imageEncoderSettings)
         {
             await Task.Yield();
             var groupedTrainingData = this.GetGroupedSet(trainingDataFolderPath);
@@ -34,7 +35,7 @@ namespace NeoCortexApi.KnnSample
             var sw = new Stopwatch();
             sw.Start();
 
-            var predictor = _multiSequenceLearning.Run(groupedTrainingData);
+            var predictor = _multiSequenceLearning.Run(groupedTrainingData, imageEncoderSettings);
             sw.Stop();
             _logger.LogInformation("Training model took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
             return predictor;
