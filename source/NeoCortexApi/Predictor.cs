@@ -70,6 +70,15 @@ namespace NeoCortexApi
 
             return predictedInputValues;
         }
+        
+        public List<ClassifierResult<string>> Predict(string inputFilePath)
+        {
+            var lyrOut = this.layer.Compute(inputFilePath, false) as ComputeCycle;
+
+            List<ClassifierResult<string>> predictedInputValues = this.classifier.GetPredictedInputValues(lyrOut.PredictiveCells.ToArray(), 3);
+
+            return predictedInputValues;
+        }
 
         public void Serialize(object obj, string name, StreamWriter sw)
         {

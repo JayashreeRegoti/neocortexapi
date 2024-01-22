@@ -21,7 +21,7 @@ namespace NeoCortexApi.KnnSample
         internal async Task<Predictor> CreatePredictor(string trainingDataFolderPath)
         {
             await Task.Yield();
-            var groupedTrainingData = GetGroupedTrainingData(trainingDataFolderPath);
+            var groupedTrainingData = this.GetGroupedSet(trainingDataFolderPath);
 
             var trainingData = this.GetDataSet(trainingDataFolderPath);
 
@@ -40,7 +40,7 @@ namespace NeoCortexApi.KnnSample
             return predictor;
         }
 
-        private Dictionary<string, List<string>> GetGroupedTrainingData(string dataSetFolderPath)
+        private Dictionary<string, List<string>> GetGroupedSet(string dataSetFolderPath)
         {
             var groupedTrainingData = new Dictionary<string, List<string>>();
             
@@ -82,45 +82,28 @@ namespace NeoCortexApi.KnnSample
         internal async Task ValidateTestData(string testDataFolderPath, Predictor predictor)
         {
             await Task.Yield();
-            var testData = GetDataSet(testDataFolderPath);
+            var groupedTestData = this.GetGroupedSet(testDataFolderPath);
 
             Console.WriteLine("Validating model...");
 
             var sw = new Stopwatch();
             sw.Start();
 
-            foreach (var testImage in testData)
+            foreach (var testDataGroup in groupedTestData)
             {
-                var image = SKBitmap.Decode(testImage.Key);
-                var imageBinary = new int[image.Width][];
-                for (int x = 0; x < image.Width; x++)
+                foreach (var testInputFile in testDataGroup.Value)
                 {
-                    imageBinary[x] = new int[image.Height];
-                    for (int y = 0; y < image.Height; y++)
+                    var predictedValue = predictor.Predict(testInputFile);
+                    if (predictedValue.Any())
                     {
-                        var pixel = image.GetPixel(x, y);
-                        var red = pixel.Red;
-                        var green = pixel.Green;
-                        var blue = pixel.Blue;
-                        if (red > 128 && green > 128 && blue > 128)
-                        {
-                            imageBinary[x][y] = 1;
-                        }
-                        else
-                        {
-                            imageBinary[x][y] = 0;
-                        }
+                        var predictedSequence = predictedValue.First().PredictedInput.Split('_')[0];
+                        _logger.LogInformation("Predicted sequence: {PredictedSequence}, for key: {Key}", predictedSequence,
+                            testDataGroup.Key);
                     }
-                }
-
-                
-                var predictedValue = predictor.Predict(imageBinary.SelectMany(x => x).ToArray());
-                var predictedSequence = predictedValue.First().PredictedInput.Split('_')[0];
-                var actualSequence = Path.GetFileNameWithoutExtension(testImage.Key);
-                if (predictedSequence != actualSequence)
-                {
-                    _logger.LogInformation("Predicted sequence: {PredictedSequence}, Actual sequence: {ActualSequence}", predictedSequence,
-                        actualSequence);
+                    else
+                    {
+                        _logger.LogInformation("No Predicted sequence for key {Key}", testDataGroup.Key);
+                    }
                 }
             }
 

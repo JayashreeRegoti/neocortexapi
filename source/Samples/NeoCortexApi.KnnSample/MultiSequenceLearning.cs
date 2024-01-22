@@ -143,8 +143,6 @@ namespace NeoCortexApi.KnnSample
             
             int cycle = 0;
             int matches = 0;
-
-            var lastPredictedValues = new List<string>(new string[] { "0"});
             
             int maxCycles = 5;
 
@@ -154,7 +152,6 @@ namespace NeoCortexApi.KnnSample
 
             for (int i = 0; i < maxCycles && isInStableState == false; i++)
             {
-                matches = 0;
 
                 cycle++;
 
@@ -165,11 +162,6 @@ namespace NeoCortexApi.KnnSample
                     foreach (var input in inputs.Value)
                     {
                         _logger.LogInformation($" -- {inputs.Key} - {input} --");
-                        
-                        // group - horizontal / vertical/ diagonal
-                        // imagedata - filepath / binary array
-                        // learn - true / false
-                    
                         var lyrOut = layer1.Compute(input, true);
 
                         if (isInStableState)
@@ -196,12 +188,6 @@ namespace NeoCortexApi.KnnSample
             {
                 _logger.LogInformation($"-------------- Sequences {sequenceKeyPair.Key} ---------------");
 
-                int maxPrevInputs = sequenceKeyPair.Value.Count - 1;
-
-                List<string> previousInputs = new List<string>();
-
-                previousInputs.Add("-1.0");
-
                 // Set on true if the system has learned the sequence with a maximum acurracy.
                 bool isLearningCompleted = false;
 
@@ -209,11 +195,7 @@ namespace NeoCortexApi.KnnSample
                 // Now training with SP+TM. SP is pretrained on the given input pattern set.
                 for (int i = 0; i < maxCycles; i++)
                 {
-                    matches = 0;
-
                     cycle++;
-
-                    _logger.LogInformation("");
 
                     _logger.LogInformation($"-------------- Cycle {cycle} ---------------");
                     _logger.LogInformation("");
@@ -225,18 +207,6 @@ namespace NeoCortexApi.KnnSample
                         var lyrOut = layer1.Compute(input, true) as ComputeCycle;
 
                         var activeColumns = layer1.GetResult("sp") as int[];
-
-                        previousInputs.Add(input.ToString());
-                        if (previousInputs.Count > (maxPrevInputs + 1))
-                            previousInputs.RemoveAt(0);
-
-                        // In the pretrained SP with HPC, the TM will quickly learn cells for patterns
-                        // In that case the starting sequence 4-5-6 might have the sam SDR as 1-2-3-4-5-6,
-                        // Which will result in returning of 4-5-6 instead of 1-2-3-4-5-6.
-                        // HtmClassifier always return the first matching sequence. Because 4-5-6 will be as first
-                        // memorized, it will match as the first one.
-                        if (previousInputs.Count < maxPrevInputs)
-                            continue;
 
                         string key = sequenceKeyPair.Key;
 
@@ -255,75 +225,11 @@ namespace NeoCortexApi.KnnSample
 
                         _logger.LogInformation($"Col  SDR: {Helpers.StringifyVector(lyrOut.ActivColumnIndicies)}");
                         _logger.LogInformation($"Cell SDR: {Helpers.StringifyVector(actCells.Select(c => c.Index).ToArray())}");
-
-                        //
-                        // If the list of predicted values from the previous step contains the currently presenting value,
-                        // we have a match.
-                        if (lastPredictedValues.Contains(key))
-                        {
-                            matches++;
-                            _logger.LogInformation($"Match. Actual value: {key} - Predicted value: {lastPredictedValues.FirstOrDefault(key)}.");
-                        }
-                        else
-                            _logger.LogInformation($"Missmatch! Actual value: {key} - Predicted values: {String.Join(',', lastPredictedValues)}");
-
-                        if (lyrOut.PredictiveCells.Count > 0)
-                        {
-                            //var predictedInputValue = cls.GetPredictedInputValue(lyrOut.PredictiveCells.ToArray());
-                            var predictedInputValues = cls.GetPredictedInputValues(lyrOut.PredictiveCells.ToArray(), 3);
-
-                            foreach (var item in predictedInputValues)
-                            {
-                                _logger.LogInformation($"Current Input: {input} \t| Predicted Input: {item.PredictedInput} - {item.Similarity}");
-                            }
-
-                            lastPredictedValues = predictedInputValues.Select(v=>v.PredictedInput).ToList();
-                        }
-                        else
-                        {
-                            _logger.LogInformation($"NO CELLS PREDICTED for next cycle.");
-                            lastPredictedValues = new List<string> ();
-                        }
                     }
-
-                    // The first element (a single element) in the sequence cannot be predicted
-                    double maxPossibleAccuraccy = (double)((double)sequenceKeyPair.Value.Count - 1) / (double)sequenceKeyPair.Value.Count * 100.0;
-
-                    double accuracy = (double)matches / (double)sequenceKeyPair.Value.Count * 100.0;
-
-                    _logger.LogInformation($"Cycle: {cycle}\tMatches={matches} of {sequenceKeyPair.Value.Count}\t {accuracy}%");
-
-                    if (accuracy >= maxPossibleAccuraccy)
-                    {
-                        maxMatchCnt++;
-                        _logger.LogInformation($"100% accuracy reched {maxMatchCnt} times.");
-
-                        //
-                        // Experiment is completed if we are 30 cycles long at the 100% accuracy.
-                        if (maxMatchCnt >= 30)
-                        {
-                            sw.Stop();
-                            _logger.LogInformation($"Sequence learned. The algorithm is in the stable state after 30 repeats with with accuracy {accuracy} of maximum possible {maxMatchCnt}. Elapsed sequence {sequenceKeyPair.Key} learning time: {sw.Elapsed}.");
-                            isLearningCompleted = true;
-                            break;
-                        }
-                    }
-                    else if (maxMatchCnt > 0)
-                    {
-                        _logger.LogInformation($"At 100% accuracy after {maxMatchCnt} repeats we get a drop of accuracy with accuracy {accuracy}. This indicates instable state. Learning will be continued.");
-                        maxMatchCnt = 0;
-                    }
-
-                    // This resets the learned state, so the first element starts allways from the beginning.
-                    tm.Reset(mem);
                 }
-
-                if (isLearningCompleted == false)
-                    throw new System.Exception($"The system didn't learn with expected accuracy!");
             }
 
             _logger.LogInformation("------------ END ------------");
-           
             return new Predictor(layer1, mem, cls);
         }
 
