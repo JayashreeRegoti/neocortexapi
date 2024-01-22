@@ -10,15 +10,18 @@ namespace NeoCortexApi.KnnSample
     public class KnnClassifierFactory
     {
         private readonly ILogger<KnnClassifierFactory> _logger;
+        private readonly MultiSequenceLearning _multiSequenceLearning;
 
-        public KnnClassifierFactory(ILogger<KnnClassifierFactory> logger)
+        public KnnClassifierFactory(ILogger<KnnClassifierFactory> logger, MultiSequenceLearning multiSequenceLearning)
         {
             _logger = logger;
+            _multiSequenceLearning = multiSequenceLearning;
         }
 
         internal async Task<Predictor> CreatePredictor(string trainingDataFolderPath)
         {
             await Task.Yield();
+            var groupedTrainingData = GetGroupedTrainingData(trainingDataFolderPath);
 
             var trainingData = this.GetDataSet(trainingDataFolderPath);
 
@@ -31,12 +34,51 @@ namespace NeoCortexApi.KnnSample
             var sw = new Stopwatch();
             sw.Start();
 
-            var predictor = new MultiSequenceLearning().Run(sequences);
+            var predictor = _multiSequenceLearning.Run(groupedTrainingData);
             sw.Stop();
             _logger.LogInformation("Training model took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
             return predictor;
         }
-        
+
+        private Dictionary<string, List<string>> GetGroupedTrainingData(string dataSetFolderPath)
+        {
+            var groupedTrainingData = new Dictionary<string, List<string>>();
+            
+            var trainingFilePaths = Directory.EnumerateFiles(dataSetFolderPath, "*.png", SearchOption.TopDirectoryOnly).ToList();
+            
+            foreach (string trainingFilePath in trainingFilePaths)
+            {
+                var key = "";
+                if (trainingFilePath.Contains("Horizontal"))
+                {
+                    key = "Horizontal";
+                }
+                else if (trainingFilePath.Contains("Vertical"))
+                {
+                    key = "Vertical";
+                }
+                else if (trainingFilePath.Contains("Diagonal"))
+                {
+                    key = "Diagonal";
+                }
+                else
+                {
+                    throw new System.Exception($"Unable to determine key: {trainingFilePath}");
+                }
+
+                if (groupedTrainingData.ContainsKey(key))
+                {
+                    groupedTrainingData[key].Add(trainingFilePath);
+                }
+                else
+                {
+                    groupedTrainingData.Add(key, new List<string> { trainingFilePath });
+                }
+            }
+
+            return groupedTrainingData;
+        }
+
         internal async Task ValidateTestData(string testDataFolderPath, Predictor predictor)
         {
             await Task.Yield();

@@ -19,6 +19,7 @@ builder.Logging.AddSerilog(logger);
 
 builder.Services.AddTransient<ImageGenerator>();
 builder.Services.AddTransient<KnnClassifierFactory>();
+builder.Services.AddTransient<MultiSequenceLearning>();
 var host = builder.Build();
 
 var trainingDataFolderPath = "./TrainingData";
@@ -38,8 +39,8 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataFold
     Console.WriteLine("Creating image with lines...");
     var imageGenerator = services.GetRequiredService<ImageGenerator>();
 
-    await imageGenerator.CreateImagesWithLine(testDataFolderPath, 30);
-    await imageGenerator.CreateImagesWithLine(trainingDataFolderPath, 100);
+    await imageGenerator.CreateImagesWithLine(testDataFolderPath, 10);
+    await imageGenerator.CreateImagesWithLine(trainingDataFolderPath, 30);
     
     Console.WriteLine("Completed Creating image with lines.");
 }

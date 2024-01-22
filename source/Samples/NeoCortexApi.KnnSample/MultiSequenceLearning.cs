@@ -1,4 +1,7 @@
 using System.Diagnostics;
+using Daenet.ImageBinarizerLib.Entities;
+using HtmImageEncoder;
+using Microsoft.Extensions.Logging;
 using NeoCortexApi.Classifiers;
 using NeoCortexApi.Encoders;
 using NeoCortexApi.Entities;
@@ -8,17 +11,24 @@ namespace NeoCortexApi.KnnSample
 {
     public class MultiSequenceLearning
     {
+        private readonly ILogger<MultiSequenceLearning> _logger;
+
+        public MultiSequenceLearning(ILogger<MultiSequenceLearning> logger)
+        {
+            _logger = logger;
+        }
         /// <summary>
         /// Runs the learning of sequences.
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sewuence name, the VALUE is th elist of element of the sequence.</param>
-        public Predictor Run(Dictionary<string, List<int[]>> sequences)
+        public Predictor Run(Dictionary<string, List<string>> sequences)
         {
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
-            int inputBits = 100;
+            int inputBits = 900;
             int numColumns = 1024;
-
+            
+            #region Configuration
             HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
             {
                 Random = new ThreadSafeRandom(42),
@@ -36,7 +46,7 @@ namespace NeoCortexApi.KnnSample
                 MaxSynapsesPerSegment = (int)(0.02 * numColumns),
 
                 ActivationThreshold = 15,
-                ConnectedPermanence = 0.5,
+                SynPermConnected = 0.5,
 
                 // Learning is slower than forgetting in this case.
                 PermanenceDecrement = 0.25,
@@ -60,7 +70,18 @@ namespace NeoCortexApi.KnnSample
                 { "MaxVal", max}
             };
 
-            EncoderBase encoder = new ScalarEncoder(settings);
+            var imageEncoderSettings = new BinarizerParams()
+            {
+                ImageHeight = 30,
+                ImageWidth = 30,
+                RedThreshold = 128,
+                GreenThreshold = 128,
+                BlueThreshold = 128,
+            };
+            var encoder = new ImageEncoder(imageEncoderSettings);
+            #endregion
+            
+            _logger.LogInformation("Completed configuration");
 
             return RunExperiment(inputBits, cfg, encoder, sequences);
         }
@@ -68,7 +89,7 @@ namespace NeoCortexApi.KnnSample
         /// <summary>
         ///
         /// </summary>
-        private Predictor RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<int[]>> sequences)
+        private Predictor RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<string>> sequences)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -79,23 +100,21 @@ namespace NeoCortexApi.KnnSample
 
             bool isInStableState = false;
 
-            HtmClassifier<string, ComputeCycle> cls = new HtmClassifier<string, ComputeCycle>();
 
             var numUniqueInputs = GetNumberOfInputs(sequences);
 
             CortexLayer<object, object> layer1 = new CortexLayer<object, object>("L1");
 
-            TemporalMemory tm = new TemporalMemory();
 
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
             HomeostaticPlasticityController hpc = new HomeostaticPlasticityController(mem, numUniqueInputs * 150, (isStable, numPatterns, actColAvg, seenInputs) =>
             {
                 if (isStable)
                     // Event should be fired when entering the stable state.
-                    Debug.WriteLine($"STABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
+                    _logger.LogInformation($"STABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
                 else
                     // Ideal SP should never enter unstable state after stable state.
-                    Debug.WriteLine($"INSTABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
+                    _logger.LogInformation($"INSTABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
 
                 // We are not learning in instable state.
                 isInStableState = isStable;
@@ -105,9 +124,10 @@ namespace NeoCortexApi.KnnSample
             }, numOfCyclesToWaitOnChange: 50);
 
 
+            
             SpatialPoolerMT sp = new SpatialPoolerMT(hpc);
             sp.Init(mem);
-            tm.Init(mem);
+            _logger.LogInformation("Initialized spatial poller");
 
             // Please note that we do not add here TM in the layer.
             // This is omitted for practical reasons, because we first eneter the newborn-stage of the algorithm
@@ -116,6 +136,7 @@ namespace NeoCortexApi.KnnSample
             // So, to improve the speed of experiment, we first ommit the TM and then after the newborn-stage we add it to the layer.
             layer1.HtmModules.Add("encoder", encoder);
             layer1.HtmModules.Add("sp", sp);
+            _logger.LogInformation("Added encoder and spatial poller to compute layer");
 
             //double[] inputs = inputValues.ToArray();
             int[] prevActiveCols = new int[0];
@@ -125,7 +146,7 @@ namespace NeoCortexApi.KnnSample
 
             var lastPredictedValues = new List<string>(new string[] { "0"});
             
-            int maxCycles = 3500;
+            int maxCycles = 5;
 
             //
             // Training SP to get stable. New-born stage.
@@ -137,13 +158,17 @@ namespace NeoCortexApi.KnnSample
 
                 cycle++;
 
-                Debug.WriteLine($"-------------- Newborn Cycle {cycle} ---------------");
+                _logger.LogInformation($"-------------- Newborn Cycle {cycle} ---------------");
 
                 foreach (var inputs in sequences)
                 {
                     foreach (var input in inputs.Value)
                     {
-                        Debug.WriteLine($" -- {inputs.Key} - {input} --");
+                        _logger.LogInformation($" -- {inputs.Key} - {input} --");
+                        
+                        // group - horizontal / vertical/ diagonal
+                        // imagedata - filepath / binary array
+                        // learn - true / false
                     
                         var lyrOut = layer1.Compute(input, true);
 
@@ -157,16 +182,19 @@ namespace NeoCortexApi.KnnSample
             }
 
             // Clear all learned patterns in the classifier.
+            HtmClassifier<string, ComputeCycle> cls = new HtmClassifier<string, ComputeCycle>();
             cls.ClearState();
 
             // We activate here the Temporal Memory algorithm.
+            TemporalMemory tm = new TemporalMemory();
+            tm.Init(mem);
             layer1.HtmModules.Add("tm", tm);
 
             //
             // Loop over all sequences.
             foreach (var sequenceKeyPair in sequences)
             {
-                Debug.WriteLine($"-------------- Sequences {sequenceKeyPair.Key} ---------------");
+                _logger.LogInformation($"-------------- Sequences {sequenceKeyPair.Key} ---------------");
 
                 int maxPrevInputs = sequenceKeyPair.Value.Count - 1;
 
@@ -185,14 +213,14 @@ namespace NeoCortexApi.KnnSample
 
                     cycle++;
 
-                    Debug.WriteLine("");
+                    _logger.LogInformation("");
 
-                    Debug.WriteLine($"-------------- Cycle {cycle} ---------------");
-                    Debug.WriteLine("");
+                    _logger.LogInformation($"-------------- Cycle {cycle} ---------------");
+                    _logger.LogInformation("");
 
                     foreach (var input in sequenceKeyPair.Value)
                     {
-                        Debug.WriteLine($"-------------- {input} ---------------");
+                        _logger.LogInformation($"-------------- {input} ---------------");
 
                         var lyrOut = layer1.Compute(input, true) as ComputeCycle;
 
@@ -210,7 +238,7 @@ namespace NeoCortexApi.KnnSample
                         if (previousInputs.Count < maxPrevInputs)
                             continue;
 
-                        string key = GetKey(previousInputs, input, sequenceKeyPair.Key);
+                        string key = sequenceKeyPair.Key;
 
                         List<Cell> actCells;
 
@@ -225,8 +253,8 @@ namespace NeoCortexApi.KnnSample
 
                         cls.Learn(key, actCells.ToArray());
 
-                        Debug.WriteLine($"Col  SDR: {Helpers.StringifyVector(lyrOut.ActivColumnIndicies)}");
-                        Debug.WriteLine($"Cell SDR: {Helpers.StringifyVector(actCells.Select(c => c.Index).ToArray())}");
+                        _logger.LogInformation($"Col  SDR: {Helpers.StringifyVector(lyrOut.ActivColumnIndicies)}");
+                        _logger.LogInformation($"Cell SDR: {Helpers.StringifyVector(actCells.Select(c => c.Index).ToArray())}");
 
                         //
                         // If the list of predicted values from the previous step contains the currently presenting value,
@@ -234,10 +262,10 @@ namespace NeoCortexApi.KnnSample
                         if (lastPredictedValues.Contains(key))
                         {
                             matches++;
-                            Debug.WriteLine($"Match. Actual value: {key} - Predicted value: {lastPredictedValues.FirstOrDefault(key)}.");
+                            _logger.LogInformation($"Match. Actual value: {key} - Predicted value: {lastPredictedValues.FirstOrDefault(key)}.");
                         }
                         else
-                            Debug.WriteLine($"Missmatch! Actual value: {key} - Predicted values: {String.Join(',', lastPredictedValues)}");
+                            _logger.LogInformation($"Missmatch! Actual value: {key} - Predicted values: {String.Join(',', lastPredictedValues)}");
 
                         if (lyrOut.PredictiveCells.Count > 0)
                         {
@@ -246,14 +274,14 @@ namespace NeoCortexApi.KnnSample
 
                             foreach (var item in predictedInputValues)
                             {
-                                Debug.WriteLine($"Current Input: {input} \t| Predicted Input: {item.PredictedInput} - {item.Similarity}");
+                                _logger.LogInformation($"Current Input: {input} \t| Predicted Input: {item.PredictedInput} - {item.Similarity}");
                             }
 
                             lastPredictedValues = predictedInputValues.Select(v=>v.PredictedInput).ToList();
                         }
                         else
                         {
-                            Debug.WriteLine($"NO CELLS PREDICTED for next cycle.");
+                            _logger.LogInformation($"NO CELLS PREDICTED for next cycle.");
                             lastPredictedValues = new List<string> ();
                         }
                     }
@@ -263,26 +291,26 @@ namespace NeoCortexApi.KnnSample
 
                     double accuracy = (double)matches / (double)sequenceKeyPair.Value.Count * 100.0;
 
-                    Debug.WriteLine($"Cycle: {cycle}\tMatches={matches} of {sequenceKeyPair.Value.Count}\t {accuracy}%");
+                    _logger.LogInformation($"Cycle: {cycle}\tMatches={matches} of {sequenceKeyPair.Value.Count}\t {accuracy}%");
 
                     if (accuracy >= maxPossibleAccuraccy)
                     {
                         maxMatchCnt++;
-                        Debug.WriteLine($"100% accuracy reched {maxMatchCnt} times.");
+                        _logger.LogInformation($"100% accuracy reched {maxMatchCnt} times.");
 
                         //
                         // Experiment is completed if we are 30 cycles long at the 100% accuracy.
                         if (maxMatchCnt >= 30)
                         {
                             sw.Stop();
-                            Debug.WriteLine($"Sequence learned. The algorithm is in the stable state after 30 repeats with with accuracy {accuracy} of maximum possible {maxMatchCnt}. Elapsed sequence {sequenceKeyPair.Key} learning time: {sw.Elapsed}.");
+                            _logger.LogInformation($"Sequence learned. The algorithm is in the stable state after 30 repeats with with accuracy {accuracy} of maximum possible {maxMatchCnt}. Elapsed sequence {sequenceKeyPair.Key} learning time: {sw.Elapsed}.");
                             isLearningCompleted = true;
                             break;
                         }
                     }
                     else if (maxMatchCnt > 0)
                     {
-                        Debug.WriteLine($"At 100% accuracy after {maxMatchCnt} repeats we get a drop of accuracy with accuracy {accuracy}. This indicates instable state. Learning will be continued.");
+                        _logger.LogInformation($"At 100% accuracy after {maxMatchCnt} repeats we get a drop of accuracy with accuracy {accuracy}. This indicates instable state. Learning will be continued.");
                         maxMatchCnt = 0;
                     }
 
@@ -294,7 +322,7 @@ namespace NeoCortexApi.KnnSample
                     throw new System.Exception($"The system didn't learn with expected accuracy!");
             }
 
-            Debug.WriteLine("------------ END ------------");
+            _logger.LogInformation("------------ END ------------");
            
             return new Predictor(layer1, mem, cls);
         }
@@ -305,7 +333,7 @@ namespace NeoCortexApi.KnnSample
         /// </summary>
         /// <param name="sequences">Alle sequences.</param>
         /// <returns></returns>
-        private int GetNumberOfInputs(Dictionary<string, List<int[]>> sequences)
+        private int GetNumberOfInputs(Dictionary<string, List<string>> sequences)
         {
             int num = 0;
 

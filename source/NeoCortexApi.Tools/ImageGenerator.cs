@@ -61,8 +61,8 @@ public class ImageGenerator
 
             imageWithLines.Add(filePath, new ImageWithLine
             {
-                Width = 500,
-                Height = 500,
+                Width = 30,
+                Height = 30,
                 LineThicknessInPercent = random.Next(1, 10),
                 RowPositionInPercent = random.Next(1, 60),
                 ColumnPositionInPercent = random.Next(1, 60),
