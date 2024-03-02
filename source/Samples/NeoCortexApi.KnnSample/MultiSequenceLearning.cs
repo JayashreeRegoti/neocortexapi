@@ -102,7 +102,7 @@ namespace NeoCortexApi.KnnSample
 
             var numUniqueInputs = GetNumberOfInputs(sequences);
 
-            CortexLayer<string, ComputeCycle> cortexLayer = new CortexLayer<string, ComputeCycle>("L1");
+            CortexLayer<string, int[]> cortexLayer = new CortexLayer<string, int[]>("L1");
 
 
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
@@ -143,7 +143,7 @@ namespace NeoCortexApi.KnnSample
             int cycle = 0;
             int matches = 0;
             
-            int maxCycles = 5;
+            int maxCycles = 5000;
 
             //
             // Training SP to get stable. New-born stage.
@@ -179,7 +179,11 @@ namespace NeoCortexApi.KnnSample
             // We activate here the Temporal Memory algorithm.
             TemporalMemory tm = new TemporalMemory();
             tm.Init(mem);
-            cortexLayer.HtmModules.Add("tm", tm);
+            
+            CortexLayer<string, ComputeCycle> cortexLayerWithTemporalMemory = new CortexLayer<string, ComputeCycle>("L1");
+            cortexLayerWithTemporalMemory.HtmModules.Add("encoder", encoder);
+            cortexLayerWithTemporalMemory.HtmModules.Add("sp", sp);
+            cortexLayerWithTemporalMemory.HtmModules.Add("tm", tm);
 
             //
             // Loop over all sequences.
@@ -199,13 +203,13 @@ namespace NeoCortexApi.KnnSample
                     _logger.LogInformation($"-------------- Cycle {cycle} ---------------");
                     _logger.LogInformation("");
 
-                    foreach (var input in sequenceKeyPair.Value)
+                    foreach (var inputFilePath in sequenceKeyPair.Value)
                     {
-                        _logger.LogInformation($"-------------- {input} ---------------");
+                        _logger.LogInformation($"-------------- {inputFilePath} ---------------");
 
-                        var lyrOut = cortexLayer.Compute(input, true) as ComputeCycle;
+                        var lyrOut = cortexLayerWithTemporalMemory.Compute(inputFilePath, true) as ComputeCycle;
 
-                        var activeColumns = cortexLayer.GetResult("sp") as int[];
+                        var activeColumns = cortexLayerWithTemporalMemory.GetResult("sp") as int[];
 
                         string key = sequenceKeyPair.Key;
 
@@ -229,7 +233,7 @@ namespace NeoCortexApi.KnnSample
             }
 
             _logger.LogInformation("------------ END ------------");
-            return new Predictor<string, string>(cortexLayer, mem, cls);
+            return new Predictor<string, string>(cortexLayerWithTemporalMemory, mem, cls);
         }
 
       
