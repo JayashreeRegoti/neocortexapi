@@ -21,7 +21,7 @@ namespace NeoCortexApiSample
         /// Runs the learning of sequences.
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sewuence name, the VALUE is th elist of element of the sequence.</param>
-        public Predictor Run(Dictionary<string, List<double>> sequences)
+        public Predictor<string, object> Run(Dictionary<string, List<double>> sequences)
         {
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
@@ -77,7 +77,7 @@ namespace NeoCortexApiSample
         /// <summary>
         ///
         /// </summary>
-        private Predictor RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<double>> sequences)
+        private Predictor<string, object> RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<double>> sequences)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -92,7 +92,7 @@ namespace NeoCortexApiSample
 
             var numUniqueInputs = GetNumberOfInputs(sequences);
 
-            CortexLayer<object, object> layer1 = new CortexLayer<object, object>("L1");
+            CortexLayer<object, ComputeCycle> layer1 = new CortexLayer<object, ComputeCycle>("L1");
 
             TemporalMemory tm = new TemporalMemory();
 
@@ -305,7 +305,7 @@ namespace NeoCortexApiSample
 
             Debug.WriteLine("------------ END ------------");
            
-            return new Predictor(layer1, mem, cls);
+            return new Predictor<string, object>(layer1, mem, cls);
         }
 
       

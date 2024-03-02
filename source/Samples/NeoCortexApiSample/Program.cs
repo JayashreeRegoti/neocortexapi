@@ -90,7 +90,7 @@ namespace NeoCortexApiSample
             PredictNextElement(predictor, list3);
         }
 
-        private static void PredictNextElement(Predictor predictor, double[] list)
+        private static void PredictNextElement(Predictor<string, object> predictor, double[] list)
         {
             Debug.WriteLine("------------------------------");
 

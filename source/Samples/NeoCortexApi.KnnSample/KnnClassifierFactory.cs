@@ -19,7 +19,7 @@ namespace NeoCortexApi.KnnSample
             _multiSequenceLearning = multiSequenceLearning;
         }
 
-        internal async Task<Predictor> CreatePredictor(string trainingDataFolderPath, BinarizerParams imageEncoderSettings)
+        internal async Task<Predictor<string, string>> CreatePredictor(string trainingDataFolderPath, BinarizerParams imageEncoderSettings)
         {
             await Task.Yield();
             var groupedTrainingData = this.GetGroupedSet(trainingDataFolderPath);
@@ -80,7 +80,7 @@ namespace NeoCortexApi.KnnSample
             return groupedTrainingData;
         }
 
-        internal async Task ValidateTestData(string testDataFolderPath, Predictor predictor)
+        internal async Task ValidateTestData(string testDataFolderPath, Predictor<string, string> predictor)
         {
             await Task.Yield();
             var groupedTestData = this.GetGroupedSet(testDataFolderPath);

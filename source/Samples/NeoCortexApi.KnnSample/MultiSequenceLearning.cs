@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Daenet.ImageBinarizerLib;
 using Daenet.ImageBinarizerLib.Entities;
 using HtmImageEncoder;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace NeoCortexApi.KnnSample
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sewuence name, the VALUE is th elist of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
-        public Predictor Run(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
+        public Predictor<string, string> Run(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
         {
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
@@ -74,6 +75,9 @@ namespace NeoCortexApi.KnnSample
 
             
             var encoder = new ImageEncoder(imageEncoderSettings);
+            // use image binarizer to encode the image as string binary and parse back into input vector and send it to sp.compute()
+            // see example SchemaImageClassificationExperiment.cs
+            // var imageBinarizer = new ImageBinarizer(imageEncoderSettings);
             #endregion
             
             _logger.LogInformation("Completed configuration");
@@ -84,7 +88,7 @@ namespace NeoCortexApi.KnnSample
         /// <summary>
         ///
         /// </summary>
-        private Predictor RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<string>> sequences)
+        private Predictor<string, string> RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<string>> sequences)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -98,7 +102,7 @@ namespace NeoCortexApi.KnnSample
 
             var numUniqueInputs = GetNumberOfInputs(sequences);
 
-            CortexLayer<object, object> layer1 = new CortexLayer<object, object>("L1");
+            CortexLayer<string, ComputeCycle> cortexLayer = new CortexLayer<string, ComputeCycle>("L1");
 
 
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
@@ -129,8 +133,8 @@ namespace NeoCortexApi.KnnSample
             // In this stage we want that SP get boosted and see all elements before we start learning with TM.
             // All would also work fine with TM in layer, but it would work much slower.
             // So, to improve the speed of experiment, we first ommit the TM and then after the newborn-stage we add it to the layer.
-            layer1.HtmModules.Add("encoder", encoder);
-            layer1.HtmModules.Add("sp", sp);
+            cortexLayer.HtmModules.Add("encoder", encoder);
+            cortexLayer.HtmModules.Add("sp", sp);
             _logger.LogInformation("Added encoder and spatial poller to compute layer");
 
             //double[] inputs = inputValues.ToArray();
@@ -157,7 +161,7 @@ namespace NeoCortexApi.KnnSample
                     foreach (var input in inputs.Value)
                     {
                         _logger.LogInformation($" -- {inputs.Key} - {input} --");
-                        var lyrOut = layer1.Compute(input, true);
+                        var lyrOut = cortexLayer.Compute(input, true);
 
                         if (isInStableState)
                             break;
@@ -175,7 +179,7 @@ namespace NeoCortexApi.KnnSample
             // We activate here the Temporal Memory algorithm.
             TemporalMemory tm = new TemporalMemory();
             tm.Init(mem);
-            layer1.HtmModules.Add("tm", tm);
+            cortexLayer.HtmModules.Add("tm", tm);
 
             //
             // Loop over all sequences.
@@ -199,9 +203,9 @@ namespace NeoCortexApi.KnnSample
                     {
                         _logger.LogInformation($"-------------- {input} ---------------");
 
-                        var lyrOut = layer1.Compute(input, true) as ComputeCycle;
+                        var lyrOut = cortexLayer.Compute(input, true) as ComputeCycle;
 
-                        var activeColumns = layer1.GetResult("sp") as int[];
+                        var activeColumns = cortexLayer.GetResult("sp") as int[];
 
                         string key = sequenceKeyPair.Key;
 
@@ -225,7 +229,7 @@ namespace NeoCortexApi.KnnSample
             }
 
             _logger.LogInformation("------------ END ------------");
-            return new Predictor(layer1, mem, cls);
+            return new Predictor<string, string>(cortexLayer, mem, cls);
         }
 
       
