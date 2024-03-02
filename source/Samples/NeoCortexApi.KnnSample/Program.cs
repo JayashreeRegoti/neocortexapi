@@ -34,7 +34,7 @@ var imageEncoderSettings = new BinarizerParams()
     BlueThreshold = 128,
 };
 
-await CreateInputDataSet(host.Services, trainingDataFolderPath, testDataFolderPath, imageEncoderSettings);
+await CreateInputDataSet(host.Services, trainingDataFolderPath, testDataFolderPath);
 var knnClassifierFactory = host.Services.GetRequiredService<KnnClassifierFactory>();
 var predictor = await knnClassifierFactory.CreatePredictor(trainingDataFolderPath, imageEncoderSettings);
 await knnClassifierFactory.ValidateTestData(testDataFolderPath, predictor);
@@ -42,14 +42,32 @@ await knnClassifierFactory.ValidateTestData(testDataFolderPath, predictor);
 return;
 
 
-async Task CreateInputDataSet(IServiceProvider services, string trainingDataFolderPath, string testDataFolderPath,
-    BinarizerParams binarizerParams)
+async Task CreateInputDataSet(IServiceProvider services, string trainingDataDirectoryPath, string testDataDirectoryPath)
 {
     Console.WriteLine("Creating image with lines...");
     var imageGenerator = services.GetRequiredService<ImageGenerator>();
 
-    await imageGenerator.CreateImagesWithLine(testDataFolderPath, 10);
-    await imageGenerator.CreateImagesWithLine(trainingDataFolderPath, 30);
+    // remove previous training data
+    // Directory.Delete(trainingDataDirectoryPath, true);
+    // Directory.Delete(testDataDirectoryPath, true);
+    
+    if(Directory.Exists(testDataDirectoryPath) && Directory.GetFiles(testDataDirectoryPath).Length > 0)
+    {
+        Console.WriteLine("Test data already exists. Skipping creation.");
+    }
+    else
+    {
+        await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, 10);
+    }
+    
+    if(Directory.Exists(trainingDataDirectoryPath) && Directory.GetFiles(trainingDataDirectoryPath).Length > 0)
+    {
+        Console.WriteLine("Training data already exists. Skipping creation.");
+    }
+    else
+    {
+        await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath, 30);
+    }
     
     Console.WriteLine("Completed Creating image with lines.");
 }
