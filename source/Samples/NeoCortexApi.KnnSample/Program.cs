@@ -48,8 +48,8 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
     var imageGenerator = services.GetRequiredService<ImageGenerator>();
 
     // remove previous training data
-    // Directory.Delete(trainingDataDirectoryPath, true);
-    // Directory.Delete(testDataDirectoryPath, true);
+    Directory.Delete(trainingDataDirectoryPath, true);
+    Directory.Delete(testDataDirectoryPath, true);
     
     if(Directory.Exists(testDataDirectoryPath) && Directory.GetFiles(testDataDirectoryPath).Length > 0)
     {
@@ -66,7 +66,7 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
     }
     else
     {
-        await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath, 30);
+        await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath, 9);
     }
     
     Console.WriteLine("Completed Creating image with lines.");

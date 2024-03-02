@@ -61,9 +61,9 @@ public class ImageGenerator
 
             imageWithLines.Add(filePath, new ImageWithLine
             {
-                Width = 30,
-                Height = 30,
-                LineThicknessInPercent = random.Next(1, 10),
+                Width = 10,
+                Height = 10,
+                LineThicknessInPercent = 3,
                 RowPositionInPercent = random.Next(1, 60),
                 ColumnPositionInPercent = random.Next(1, 60),
                 LineLengthInPercent = random.Next(40, 100),
@@ -301,8 +301,9 @@ public class ImageGenerator
         var useJitter = imageWithLine.useJitter;
         
         var rowStartPosition = (rowPositionInPercent * height) / 100;
+        
         var lineLength = (lineLengthInPercent * width) / 100;
-        var lineThickness = (lineThicknessInPercent * height) / 100;
+        var lineThickness = 1;
         var rowEndPosition = rowStartPosition + lineLength;
         if(rowEndPosition > height)
         {
@@ -385,6 +386,14 @@ public class ImageGenerator
                 }
                 
             }
+        }
+        
+        
+        if(data.All(x => x.All(y => y == 0)))
+        {
+            _logger.LogInformation(
+                "Empty image generated: {FilePath}, {LineThicknessInPercent}, {LineLengthInPercent}, {RowPositionInPercent}, {ColumnPositionInPercent}, {UseJitter}, {RowStartPosition}, {RowEndPosition}, {ColumnStartPosition}, {ColumnEndPosition}",
+                filePath, lineThicknessInPercent, lineLengthInPercent, rowPositionInPercent, columnPositionInPercent, useJitter, rowStartPosition, rowEndPosition, columnStartPosition, columnEndPosition);
         }
 
         await GenerateImage(filePath, width, height, data);
