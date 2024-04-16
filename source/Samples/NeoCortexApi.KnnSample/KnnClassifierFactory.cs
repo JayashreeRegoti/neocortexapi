@@ -94,18 +94,20 @@ namespace NeoCortexApi.KnnSample
             {
                 foreach (var testInputFile in testDataGroup.Value)
                 {
-                    _logger.LogInformation("Testing predictor with file: {TestInputFile}", testInputFile);
-
                     var predictedValue = predictor.Predict(testInputFile);
                     if (predictedValue.Any())
                     {
                         var predictedSequence = predictedValue.First().PredictedInput.Split('_')[0];
-                        _logger.LogInformation("Predicted sequence: {PredictedSequence}, for key: {Key}", predictedSequence,
-                            testDataGroup.Key);
+                        _logger.LogInformation("Predicted sequence: {PredictedSequence}, for key: {Key}, test input file: {TestInputFile}", 
+                            predictedSequence,
+                            testDataGroup.Key,
+                            testInputFile);
                     }
                     else
                     {
-                        _logger.LogInformation("No Predicted sequence for key {Key}", testDataGroup.Key);
+                        _logger.LogInformation("No Predicted sequence for key {Key}, test input file: {TestInputFile}",
+                            testDataGroup.Key, 
+                            testInputFile);
                     }
                 }
             }
