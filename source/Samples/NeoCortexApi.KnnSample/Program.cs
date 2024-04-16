@@ -37,7 +37,9 @@ var imageEncoderSettings = new BinarizerParams()
     BlueThreshold = 128,
 };
 
-await CreateInputDataSet(host.Services, trainingDataFolderPath, testDataFolderPath);
+var createFreshInputFiles = true;
+
+await CreateInputDataSet(host.Services, trainingDataFolderPath, testDataFolderPath, createFreshInputFiles);
 var knnClassifierFactory = host.Services.GetRequiredService<KnnClassifierFactory>();
 var predictor = await knnClassifierFactory.CreatePredictor(trainingDataFolderPath, imageEncoderSettings);
 await knnClassifierFactory.ValidateTestData(testDataFolderPath, predictor);
@@ -45,14 +47,24 @@ await knnClassifierFactory.ValidateTestData(testDataFolderPath, predictor);
 return;
 
 
-async Task CreateInputDataSet(IServiceProvider services, string trainingDataDirectoryPath, string testDataDirectoryPath)
+async Task CreateInputDataSet(IServiceProvider services, string trainingDataDirectoryPath, string testDataDirectoryPath, bool createFreshData = false)
 {
     Console.WriteLine("Creating image with lines...");
     var imageGenerator = services.GetRequiredService<ImageGenerator>();
 
     // remove previous training data
-    Directory.Delete(trainingDataDirectoryPath, true);
-    Directory.Delete(testDataDirectoryPath, true);
+    if (createFreshData)
+    {
+        if (Directory.Exists(testDataDirectoryPath))
+        {
+            Directory.Delete(testDataDirectoryPath, true);
+        }
+
+        if (Directory.Exists(trainingDataDirectoryPath))
+        {
+            Directory.Delete(trainingDataDirectoryPath, true);
+        }
+    }
     
     if(Directory.Exists(testDataDirectoryPath) && Directory.GetFiles(testDataDirectoryPath).Length > 0)
     {
