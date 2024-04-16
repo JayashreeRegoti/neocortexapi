@@ -58,31 +58,38 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
         if (Directory.Exists(testDataDirectoryPath))
         {
             Directory.Delete(testDataDirectoryPath, true);
+            await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, 10);
         }
 
         if (Directory.Exists(trainingDataDirectoryPath))
         {
             Directory.Delete(trainingDataDirectoryPath, true);
+            await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, 9);
+        }
+        
+        Console.WriteLine("Completed Creating image with lines.");
+    }
+    else
+    {
+        if(Directory.Exists(testDataDirectoryPath) && Directory.GetFiles(testDataDirectoryPath).Length > 0)
+        {
+            Console.WriteLine("Test data already exists. Skipping creation.");
+        }
+        else
+        {
+            await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, 10);
+        }
+    
+        if(Directory.Exists(trainingDataDirectoryPath) && Directory.GetFiles(trainingDataDirectoryPath).Length > 0)
+        {
+            Console.WriteLine("Training data already exists. Skipping creation.");
+        }
+        else
+        {
+            await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, 9);
         }
     }
     
-    if(Directory.Exists(testDataDirectoryPath) && Directory.GetFiles(testDataDirectoryPath).Length > 0)
-    {
-        Console.WriteLine("Test data already exists. Skipping creation.");
-    }
-    else
-    {
-        await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, 10);
-    }
     
-    if(Directory.Exists(trainingDataDirectoryPath) && Directory.GetFiles(trainingDataDirectoryPath).Length > 0)
-    {
-        Console.WriteLine("Training data already exists. Skipping creation.");
-    }
-    else
-    {
-        await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, 9);
-    }
     
-    Console.WriteLine("Completed Creating image with lines.");
 }
