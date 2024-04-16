@@ -94,6 +94,8 @@ namespace NeoCortexApi.KnnSample
             {
                 foreach (var testInputFile in testDataGroup.Value)
                 {
+                    _logger.LogInformation("Testing predictor with file: {TestInputFile}", testInputFile);
+
                     var predictedValue = predictor.Predict(testInputFile);
                     if (predictedValue.Any())
                     {
