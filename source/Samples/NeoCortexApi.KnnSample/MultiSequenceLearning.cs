@@ -29,7 +29,7 @@ namespace NeoCortexApi.KnnSample
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
-            int numColumns = 30;
+            int numColumns = 300;
             
             #region Configuration
             HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
@@ -58,6 +58,15 @@ namespace NeoCortexApi.KnnSample
                 // Used by punishing of segments.
                 PredictedSegmentDecrement = 0.1
             };
+            
+            var numUniqueInputs = GetNumberOfInputs(sequences);
+
+            var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityControllerConfiguration()
+            {
+                MinCycles = numUniqueInputs * 3,
+                MaxCycles = 1000,
+                NumOfCyclesToWaitOnChange = 50
+            };
 
             /*
             double max = 20;
@@ -84,46 +93,49 @@ namespace NeoCortexApi.KnnSample
             
             _logger.LogInformation("Completed configuration");
 
-            return RunExperiment(inputBits, cfg, encoder, sequences);
+            return RunExperiment(inputBits, cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
         }
 
         /// <summary>
         ///
         /// </summary>
-        private Predictor<string, string> RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<string>> sequences)
+        private Predictor<string, string> RunExperiment(
+            int inputBits, 
+            HtmConfig cfg, 
+            HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
+            EncoderBase encoder, 
+            Dictionary<string, List<string>> sequences)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             int maxMatchCnt = 0;
-
             var mem = new Connections(cfg);
-
             bool isInStableState = false;
-
-
-            var numUniqueInputs = GetNumberOfInputs(sequences);
-
             CortexLayer<string, int[]> cortexLayer = new CortexLayer<string, int[]>("L1");
-
-
+            
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
-            HomeostaticPlasticityController hpc = new HomeostaticPlasticityController(mem, numUniqueInputs * 150, (isStable, numPatterns, actColAvg, seenInputs) =>
-            {
-                if (isStable)
-                    // Event should be fired when entering the stable state.
-                    _logger.LogInformation($"STABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
-                else
-                    // Ideal SP should never enter unstable state after stable state.
-                    _logger.LogInformation($"INSTABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
+            HomeostaticPlasticityController hpc = new HomeostaticPlasticityController(
+                mem,
+                homeostaticPlasticityControllerConfiguration.MinCycles,
+                (isStable, numPatterns, actColAvg, seenInputs) =>
+                {
+                    if (isStable)
+                        // Event should be fired when entering the stable state.
+                        _logger.LogInformation(
+                            $"STABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
+                    else
+                        // Ideal SP should never enter unstable state after stable state.
+                        _logger.LogInformation(
+                            $"INSTABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
 
-                // We are not learning in instable state.
-                isInStableState = isStable;
+                    // We are not learning in instable state.
+                    isInStableState = isStable;
 
-                // Clear active and predictive cells.
-                //tm.Reset(mem);
-            }, numOfCyclesToWaitOnChange: 50);
-
+                    // Clear active and predictive cells.
+                    //tm.Reset(mem);
+                },
+                homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
             
             SpatialPoolerMT sp = new SpatialPoolerMT(hpc);
@@ -145,7 +157,7 @@ namespace NeoCortexApi.KnnSample
             int cycle = 0;
             int matches = 0;
             
-            int maxCycles = 5000;
+            int maxCycles = homeostaticPlasticityControllerConfiguration.MaxCycles;
 
             //
             // Training SP to get stable. New-born stage.
