@@ -5,6 +5,7 @@ namespace NeoCortexApi.Tools;
 
 public class ImageGenerator
 {
+        
     private readonly ILogger<ImageGenerator> _logger;
 
     public ImageGenerator(ILogger<ImageGenerator> logger)
@@ -36,7 +37,7 @@ public class ImageGenerator
         skData.SaveTo(stream);
     }
 
-    public async Task CreateImagesWithLine(string folderPath, int numberOfImages = 1)
+    public async Task CreateImagesWithLine(string folderPath, int width, int height, int numberOfImages = 1)
     {
         if(Directory.Exists(folderPath))
         {
@@ -61,8 +62,8 @@ public class ImageGenerator
 
             imageWithLines.Add(filePath, new ImageWithLine
             {
-                Width = 10,
-                Height = 10,
+                Width = width,
+                Height = height,
                 LineThicknessInPercent = 3,
                 RowPositionInPercent = random.Next(1, 60),
                 ColumnPositionInPercent = random.Next(1, 60),

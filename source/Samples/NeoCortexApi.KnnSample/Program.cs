@@ -25,10 +25,13 @@ var host = builder.Build();
 
 var trainingDataFolderPath = "./TrainingData";
 var testDataFolderPath = "./TestData";
+
+var width = 30;
+var height = 30;
 var imageEncoderSettings = new BinarizerParams()
 {
-    ImageHeight = 30,
-    ImageWidth = 30,
+    ImageHeight = height,
+    ImageWidth = width,
     RedThreshold = 128,
     GreenThreshold = 128,
     BlueThreshold = 128,
@@ -57,7 +60,7 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
     }
     else
     {
-        await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, 10);
+        await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, 10);
     }
     
     if(Directory.Exists(trainingDataDirectoryPath) && Directory.GetFiles(trainingDataDirectoryPath).Length > 0)
@@ -66,7 +69,7 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
     }
     else
     {
-        await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath, 9);
+        await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, 9);
     }
     
     Console.WriteLine("Completed Creating image with lines.");

@@ -28,15 +28,15 @@ namespace NeoCortexApi.KnnSample
         {
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
-            int inputBits = 900;
-            int numColumns = 1024;
+            int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
+            int numColumns = 30;
             
             #region Configuration
             HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
             {
                 Random = new ThreadSafeRandom(42),
 
-                CellsPerColumn = 25,
+                CellsPerColumn = 30,
                 GlobalInhibition = true,
                 LocalAreaDensity = -1,
                 NumActiveColumnsPerInhArea = 0.02 * numColumns,
@@ -59,6 +59,7 @@ namespace NeoCortexApi.KnnSample
                 PredictedSegmentDecrement = 0.1
             };
 
+            /*
             double max = 20;
 
             Dictionary<string, object> settings = new Dictionary<string, object>()
@@ -72,6 +73,7 @@ namespace NeoCortexApi.KnnSample
                 { "ClipInput", false},
                 { "MaxVal", max}
             };
+            */
 
             
             var encoder = new ImageEncoder(imageEncoderSettings);
