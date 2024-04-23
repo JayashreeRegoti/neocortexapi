@@ -117,7 +117,7 @@ namespace NeoCortexApi.Classifiers
     /// <summary>
     /// Implementation of the KNN algorithm. 
     /// </summary>
-    public class KNeighborsClassifier<TIN, TOUT> : IClassifierKnn<TIN, TOUT>
+    public class KNeighborsClassifier<TIN, TOUT> : IClassifier<TIN, TOUT>, IClassifierKnn<TIN, TOUT>
     {
         private int _nNeighbors = 1; // From Numenta's example 1 is default
         private DefaultDictionary<string, List<int[]>> _models = new DefaultDictionary<string, List<int[]>>();
@@ -247,6 +247,12 @@ namespace NeoCortexApi.Classifiers
                 return new List<ClassifierResult<TIN>>();
 
             var unclassifiedSequence = unclassifiedCells.Select(idx => idx.Index).ToArray();
+            return GetPredictedInputValues(unclassifiedSequence, howMany);
+        }
+        
+        public List<ClassifierResult<TIN>> GetPredictedInputValues(int[] cellIndices, short howMany = 1)
+        {
+            
             var mappedElements = new DefaultDictionary<int, List<ClassificationAndDistance>>();
             _nNeighbors = _models.Values.Count;
 
@@ -254,7 +260,7 @@ namespace NeoCortexApi.Classifiers
             {
                 foreach (var (sequence, idx) in model.Value.WithIndex())
                 {
-                    foreach (var dict in GetDistanceTable(sequence, ref unclassifiedSequence))
+                    foreach (var dict in GetDistanceTable(sequence, ref cellIndices))
                         mappedElements[dict.Key].Add(new ClassificationAndDistance(model.Key, dict.Value, idx));
                 }
             }
@@ -281,6 +287,11 @@ namespace NeoCortexApi.Classifiers
                     _models[classification].RemoveAt(0);
                 _models[classification].Add(cellIndicies);
             }
+        }
+
+        public TIN GetPredictedInputValue(Cell[] predictiveCells)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

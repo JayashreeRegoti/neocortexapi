@@ -22,7 +22,7 @@ namespace NeoCortexApi
 
         private CortexLayer<CortexLayerTIn, ComputeCycle> layer { get; set; }
 
-        private HtmClassifier<ClassifierTIn, ComputeCycle> classifier { get; set; }
+        private IClassifier<ClassifierTIn, ComputeCycle> classifier { get; set; }
 
         /// <summary>
         /// Initializes the predictor functionality.
@@ -31,7 +31,7 @@ namespace NeoCortexApi
         /// <param name="connections">The HTM memory in the learned state.</param>
         /// <param name="classifier">The classifier that contains the state of learned sequences.</param>
 
-        public Predictor(CortexLayer<CortexLayerTIn, ComputeCycle> layer, Connections connections, HtmClassifier<ClassifierTIn, ComputeCycle> classifier)
+        public Predictor(CortexLayer<CortexLayerTIn, ComputeCycle> layer, Connections connections, IClassifier<ClassifierTIn, ComputeCycle> classifier)
         {
             this.connections = connections;
             this.layer = layer;
@@ -57,10 +57,21 @@ namespace NeoCortexApi
         {
             var lyrOut = this.layer.Compute(input, false) as ComputeCycle;
 
-            List<ClassifierResult<ClassifierTIn>> predictedInputValues = this.classifier.GetPredictedInputValues(lyrOut.PredictiveCells.ToArray(), 3);
+            List<ClassifierResult<ClassifierTIn>> predictedInputValues = this.classifier.GetPredictedInputValues(lyrOut.PredictiveCells.Select(idx => idx.Index).ToArray(), 3);
 
             return predictedInputValues;
         }
+        
+        private static int[] GetCellIndicies(Cell[] output)
+        {
+            int[] arr = new int[output.Length];
+            for (int i = 0; i < output.Length; i++)
+            {
+                arr[i] = output[i].Index;
+            }
+            return arr;
+        }
+
 
         public void Serialize(object obj, string name, StreamWriter sw)
         {

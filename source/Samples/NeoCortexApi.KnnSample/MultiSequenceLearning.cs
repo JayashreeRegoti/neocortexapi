@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Daenet.ImageBinarizerLib;
 using Daenet.ImageBinarizerLib.Entities;
 using HtmImageEncoder;
 using Microsoft.Extensions.Logging;
@@ -22,7 +21,7 @@ namespace NeoCortexApi.KnnSample
         /// <summary>
         /// Runs the learning of sequences.
         /// </summary>
-        /// <param name="sequences">Dictionary of sequences. KEY is the sewuence name, the VALUE is th elist of element of the sequence.</param>
+        /// <param name="sequences">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
         public Predictor<string, string> Run(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
         {
@@ -187,7 +186,7 @@ namespace NeoCortexApi.KnnSample
             }
 
             // Clear all learned patterns in the classifier.
-            HtmClassifier<string, ComputeCycle> cls = new HtmClassifier<string, ComputeCycle>();
+            var cls = new KNeighborsClassifier<string, ComputeCycle>();
             cls.ClearState();
 
             // We activate here the Temporal Memory algorithm.
