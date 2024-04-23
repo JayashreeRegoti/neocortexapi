@@ -28,7 +28,7 @@ namespace NeoCortexApi.KnnSample
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
-            int numColumns = 300;
+            int numColumns = 900;
             
             #region Configuration
             HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
