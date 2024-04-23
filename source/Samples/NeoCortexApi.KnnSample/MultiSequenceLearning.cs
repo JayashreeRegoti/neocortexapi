@@ -239,8 +239,8 @@ namespace NeoCortexApi.KnnSample
 
                         cls.Learn(key, actCells.ToArray());
 
-                        _logger.LogInformation($"Col  SDR: {Helpers.StringifyVector(lyrOut.ActivColumnIndicies)}");
-                        _logger.LogInformation($"Cell SDR: {Helpers.StringifyVector(actCells.Select(c => c.Index).ToArray())}");
+                        _logger.LogInformation($"Col  SDR: {string.Join(",", lyrOut.ActivColumnIndicies)}");
+                        _logger.LogInformation($"Cell SDR: {string.Join(",", actCells.Select(c => c.Index).ToArray())}");
                     }
                 }
             }
