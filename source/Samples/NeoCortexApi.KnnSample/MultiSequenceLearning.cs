@@ -115,9 +115,8 @@ namespace NeoCortexApi.KnnSample
             Stopwatch sw = new ();
             sw.Start();
 
-            Connections mem = new (cfg);
             bool isInStableState = false;
-            CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
+            Connections mem = new (cfg);
             
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
             HomeostaticPlasticityController hpc = new (
@@ -137,7 +136,6 @@ namespace NeoCortexApi.KnnSample
                 },
                 homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
-            
             SpatialPoolerMT sp = new (hpc);
             sp.Init(mem);
             _logger.LogInformation("Initialized spatial poller");
@@ -147,6 +145,7 @@ namespace NeoCortexApi.KnnSample
             // In this stage we want that SP get boosted and see all elements before we start learning with TM.
             // All would also work fine with TM in layer, but it would work much slower.
             // So, to improve the speed of experiment, we first omit the TM and then after the newborn-stage we add it to the layer.
+            CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
             _logger.LogInformation("Added encoder and spatial poller to compute layer");
