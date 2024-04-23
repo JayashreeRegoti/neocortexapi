@@ -23,7 +23,7 @@ namespace NeoCortexApi.KnnSample
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
-        public Predictor<string, string> Run(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
+        public Predictor<string, string> GeneratePredictorModel(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
         {
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
@@ -89,16 +89,25 @@ namespace NeoCortexApi.KnnSample
             // see example SchemaImageClassificationExperiment.cs
             // var imageBinarizer = new ImageBinarizer(imageEncoderSettings);
             #endregion
+            _logger.LogInformation("Configuration Completed.");
             
-            _logger.LogInformation("Completed configuration");
-
-            return RunExperiment(inputBits, cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            _logger.LogInformation("Generating Predictor Model.");
+            var predictor = GenerateKnnModel(inputBits, cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            _logger.LogInformation("Predictor Model Generated.");
+            
+            return predictor;
         }
 
         /// <summary>
-        ///
+        /// Creates the KNN model.
         /// </summary>
-        private Predictor<string, string> RunExperiment(
+        /// <param name="inputBits"></param>
+        /// <param name="cfg"></param>
+        /// <param name="homeostaticPlasticityControllerConfiguration"></param>
+        /// <param name="encoder"></param>
+        /// <param name="sequences"></param>
+        /// <returns></returns>
+        private Predictor<string, string> GenerateKnnModel(
             int inputBits, 
             HtmConfig cfg, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
@@ -119,14 +128,16 @@ namespace NeoCortexApi.KnnSample
                 homeostaticPlasticityControllerConfiguration.MinCycles,
                 (isStable, numPatterns, actColAvg, seenInputs) =>
                 {
-                    if (isStable)
-                        // Event should be fired when entering the stable state.
+                    if (isStable) // Event should be fired when entering the stable state.
+                    {
                         _logger.LogInformation(
                             $"STABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
-                    else
-                        // Ideal SP should never enter unstable state after stable state.
+                    }
+                    else // Ideal SP should never enter unstable state after stable state.
+                    {
                         _logger.LogInformation(
                             $"INSTABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
+                    }
 
                     // We are not learning in instable state.
                     isInStableState = isStable;
@@ -142,10 +153,10 @@ namespace NeoCortexApi.KnnSample
             _logger.LogInformation("Initialized spatial poller");
 
             // Please note that we do not add here TM in the layer.
-            // This is omitted for practical reasons, because we first eneter the newborn-stage of the algorithm
+            // This is omitted for practical reasons, because we first enter the newborn-stage of the algorithm
             // In this stage we want that SP get boosted and see all elements before we start learning with TM.
             // All would also work fine with TM in layer, but it would work much slower.
-            // So, to improve the speed of experiment, we first ommit the TM and then after the newborn-stage we add it to the layer.
+            // So, to improve the speed of experiment, we first omit the TM and then after the newborn-stage we add it to the layer.
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
             _logger.LogInformation("Added encoder and spatial poller to compute layer");
@@ -197,17 +208,11 @@ namespace NeoCortexApi.KnnSample
             cortexLayerWithTemporalMemory.HtmModules.Add("encoder", encoder);
             cortexLayerWithTemporalMemory.HtmModules.Add("sp", sp);
             cortexLayerWithTemporalMemory.HtmModules.Add("tm", tm);
-
-            //
-            // Loop over all sequences.
+            
             foreach (var sequenceKeyPair in sequences)
             {
                 _logger.LogInformation($"-------------- Sequences {sequenceKeyPair.Key} ---------------");
-
-                // Set on true if the system has learned the sequence with a maximum acurracy.
-                bool isLearningCompleted = false;
-
-                //
+                
                 // Now training with SP+TM. SP is pretrained on the given input pattern set.
                 for (int i = 0; i < maxCycles; i++)
                 {
@@ -249,48 +254,13 @@ namespace NeoCortexApi.KnnSample
             return new Predictor<string, string>(cortexLayerWithTemporalMemory, mem, cls);
         }
 
-      
+
         /// <summary>
         /// Gets the number of all unique inputs.
         /// </summary>
         /// <param name="sequences">Alle sequences.</param>
         /// <returns></returns>
-        private int GetNumberOfInputs(Dictionary<string, List<string>> sequences)
-        {
-            int num = 0;
-
-            foreach (var inputs in sequences)
-            {
-                //num += inputs.Value.Distinct().Count();
-                num += inputs.Value.Count;
-            }
-
-            return num;
-        }
-
-
-        /// <summary>
-        /// Constracts the unique key of the element of an sequece. This key is used as input for HtmClassifier.
-        /// It makes sure that alle elements that belong to the same sequence are prefixed with the sequence.
-        /// The prediction code can then extract the sequence prefix to the predicted element.
-        /// </summary>
-        /// <param name="prevInputs"></param>
-        /// <param name="input"></param>
-        /// <param name="sequence"></param>
-        /// <returns></returns>
-        private static string GetKey(List<string> prevInputs, int[] input, string sequence)
-        {
-            string key = String.Empty;
-
-            for (int i = 0; i < prevInputs.Count; i++)
-            {
-                if (i > 0)
-                    key += "-";
-
-                key += (prevInputs[i]);
-            }
-
-            return $"{sequence}_{key}";
-        }
+        private static int GetNumberOfInputs(Dictionary<string, List<string>> sequences) =>
+            sequences.Sum(inputs => inputs.Value.Count);
     }
 }

@@ -35,7 +35,7 @@ namespace NeoCortexApi.KnnSample
             var sw = new Stopwatch();
             sw.Start();
 
-            var predictor = _multiSequenceLearning.Run(groupedTrainingData, imageEncoderSettings);
+            var predictor = _multiSequenceLearning.GeneratePredictorModel(groupedTrainingData, imageEncoderSettings);
             sw.Stop();
             _logger.LogInformation("Training model took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
             return predictor;
