@@ -231,8 +231,10 @@ namespace NeoCortexApi.Classifiers
                 cls.NumOfSameBits = overLaps[key];
                 result.Add(cls);
             }
-
-            return result.GetRange(0, howMany).ToList();
+            
+            return result.Count >= howMany 
+                ? result.GetRange(0, howMany).ToList() 
+                : result.ToList();
         }
 
         /// <summary>

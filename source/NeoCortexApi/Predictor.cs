@@ -61,17 +61,6 @@ namespace NeoCortexApi
 
             return predictedInputValues;
         }
-        
-        private static int[] GetCellIndicies(Cell[] output)
-        {
-            int[] arr = new int[output.Length];
-            for (int i = 0; i < output.Length; i++)
-            {
-                arr[i] = output[i].Index;
-            }
-            return arr;
-        }
-
 
         public void Serialize(object obj, string name, StreamWriter sw)
         {
