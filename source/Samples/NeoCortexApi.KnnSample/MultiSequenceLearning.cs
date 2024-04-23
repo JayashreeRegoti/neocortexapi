@@ -190,24 +190,24 @@ namespace NeoCortexApi.KnnSample
             cls.ClearState();
 
             // We activate here the Temporal Memory algorithm.
-            TemporalMemory tm = new TemporalMemory();
+            TemporalMemory tm = new ();
             tm.Init(mem);
             
-            CortexLayer<string, ComputeCycle> cortexLayerWithTemporalMemory = new CortexLayer<string, ComputeCycle>("L1");
+            CortexLayer<string, ComputeCycle> cortexLayerWithTemporalMemory = new ("CortexLayerWithTemporalMemory");
             cortexLayerWithTemporalMemory.HtmModules.Add("encoder", encoder);
             cortexLayerWithTemporalMemory.HtmModules.Add("sp", sp);
             cortexLayerWithTemporalMemory.HtmModules.Add("tm", tm);
             
             foreach (var sequenceKeyPair in sequences)
             {
-                _logger.LogInformation($"-------------- Sequences {sequenceKeyPair.Key} ---------------");
+                _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------", sequenceKeyPair.Key);
                 
                 // Now training with SP+TM. SP is pretrained on the given input pattern set.
                 for (int i = 0; i < maxCycles; i++)
                 {
                     cycle++;
 
-                    _logger.LogInformation($"-------------- Cycle {cycle} ---------------");
+                    _logger.LogInformation("-------------- Cycle {cycle} ---------------", cycle);
                     _logger.LogInformation("");
 
                     foreach (var inputFilePath in sequenceKeyPair.Value)
