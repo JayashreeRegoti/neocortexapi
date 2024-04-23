@@ -28,10 +28,10 @@ namespace NeoCortexApi.KnnSample
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
-            int numColumns = 900;
+            const int numColumns = 900;
             
             #region Configuration
-            HtmConfig cfg = new HtmConfig(new int[] { inputBits }, new int[] { numColumns })
+            HtmConfig cfg = new (inputDims:new [] { inputBits }, columnDims:new [] { numColumns })
             {
                 Random = new ThreadSafeRandom(42),
 
@@ -92,7 +92,7 @@ namespace NeoCortexApi.KnnSample
             _logger.LogInformation("Configuration Completed.");
             
             _logger.LogInformation("Generating Predictor Model.");
-            var predictor = GenerateKnnModel(inputBits, cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            var predictor = this.GenerateKnnModel(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
             _logger.LogInformation("Predictor Model Generated.");
             
             return predictor;
@@ -101,45 +101,35 @@ namespace NeoCortexApi.KnnSample
         /// <summary>
         /// Creates the KNN model.
         /// </summary>
-        /// <param name="inputBits"></param>
         /// <param name="cfg"></param>
         /// <param name="homeostaticPlasticityControllerConfiguration"></param>
         /// <param name="encoder"></param>
         /// <param name="sequences"></param>
         /// <returns></returns>
         private Predictor<string, string> GenerateKnnModel(
-            int inputBits, 
             HtmConfig cfg, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
             EncoderBase encoder, 
             Dictionary<string, List<string>> sequences)
         {
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = new ();
             sw.Start();
 
-            int maxMatchCnt = 0;
-            var mem = new Connections(cfg);
+            Connections mem = new (cfg);
             bool isInStableState = false;
-            CortexLayer<string, int[]> cortexLayer = new CortexLayer<string, int[]>("L1");
+            CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
-            HomeostaticPlasticityController hpc = new HomeostaticPlasticityController(
+            HomeostaticPlasticityController hpc = new (
                 mem,
                 homeostaticPlasticityControllerConfiguration.MinCycles,
-                (isStable, numPatterns, actColAvg, seenInputs) =>
+                (isStable, numPatterns, _, seenInputs) =>
                 {
-                    if (isStable) // Event should be fired when entering the stable state.
-                    {
-                        _logger.LogInformation(
-                            $"STABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
-                    }
-                    else // Ideal SP should never enter unstable state after stable state.
-                    {
-                        _logger.LogInformation(
-                            $"INSTABLE: Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {seenInputs / numPatterns}");
-                    }
-
-                    // We are not learning in instable state.
+                    _logger.LogInformation(
+                        "Stable: {isStable}, Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {iteration}",
+                        isStable, numPatterns, seenInputs, seenInputs / numPatterns);
+                   
+                    // We are not learning in unstable state.
                     isInStableState = isStable;
 
                     // Clear active and predictive cells.
@@ -148,7 +138,7 @@ namespace NeoCortexApi.KnnSample
                 homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
             
-            SpatialPoolerMT sp = new SpatialPoolerMT(hpc);
+            SpatialPoolerMT sp = new (hpc);
             sp.Init(mem);
             _logger.LogInformation("Initialized spatial poller");
 
@@ -160,12 +150,8 @@ namespace NeoCortexApi.KnnSample
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
             _logger.LogInformation("Added encoder and spatial poller to compute layer");
-
-            //double[] inputs = inputValues.ToArray();
-            int[] prevActiveCols = new int[0];
             
             int cycle = 0;
-            int matches = 0;
             
             int maxCycles = homeostaticPlasticityControllerConfiguration.MaxCycles;
 
@@ -178,21 +164,25 @@ namespace NeoCortexApi.KnnSample
 
                 cycle++;
 
-                _logger.LogInformation($"-------------- Newborn Cycle {cycle} ---------------");
+                _logger.LogInformation("-------------- Newborn Cycle {cycle} ---------------", cycle);
 
                 foreach (var inputs in sequences)
                 {
                     foreach (var input in inputs.Value)
                     {
-                        _logger.LogInformation($" -- {inputs.Key} - {input} --");
+                        _logger.LogInformation(" -- {inputsKey} - {input} --", inputs.Key, input);
                         var lyrOut = cortexLayer.Compute(input, true);
 
                         if (isInStableState)
+                        {
                             break;
+                        }
                     }
 
                     if (isInStableState)
+                    {
                         break;
+                    }
                 }
             }
 
@@ -223,7 +213,7 @@ namespace NeoCortexApi.KnnSample
 
                     foreach (var inputFilePath in sequenceKeyPair.Value)
                     {
-                        _logger.LogInformation($"-------------- {inputFilePath} ---------------");
+                        _logger.LogInformation("-------------- {inputFilePath} ---------------", inputFilePath);
 
                         var lyrOut = cortexLayerWithTemporalMemory.Compute(inputFilePath, true) as ComputeCycle;
 
@@ -231,21 +221,14 @@ namespace NeoCortexApi.KnnSample
 
                         string key = sequenceKeyPair.Key;
 
-                        List<Cell> actCells;
-
-                        if (lyrOut.ActiveCells.Count == lyrOut.WinnerCells.Count)
-                        {
-                            actCells = lyrOut.ActiveCells;
-                        }
-                        else
-                        {
-                            actCells = lyrOut.WinnerCells;
-                        }
+                        List<Cell> actCells = lyrOut.ActiveCells.Count == lyrOut.WinnerCells.Count
+                            ? lyrOut.ActiveCells
+                            : lyrOut.WinnerCells;
 
                         cls.Learn(key, actCells.ToArray());
 
-                        _logger.LogInformation($"Col  SDR: {string.Join(",", lyrOut.ActivColumnIndicies)}");
-                        _logger.LogInformation($"Cell SDR: {string.Join(",", actCells.Select(c => c.Index).ToArray())}");
+                        _logger.LogInformation("Col  SDR: {activeColumnIndices}",string.Join(",", lyrOut.ActivColumnIndicies));
+                        _logger.LogInformation("Cell SDR: {activeCellIndices}", string.Join(",", actCells.Select(c => c.Index).ToArray()));
                     }
                 }
             }
