@@ -98,10 +98,11 @@ namespace NeoCortexApi.KnnSample
                     if (predictedValue.Any())
                     {
                         var predictedSequence = predictedValue.First().PredictedInput.Split('_')[0];
-                        _logger.LogInformation("Predicted sequence: {PredictedSequence}, for key: {Key}, test input file: {TestInputFile}", 
+                        _logger.LogInformation("Predicted sequence: {PredictedSequence}, for key: {Key}, test input file: {TestInputFile}, guesses: {Guesses}", 
                             predictedSequence,
                             testDataGroup.Key,
-                            testInputFile);
+                            testInputFile,
+                            string.Join(",", predictedValue.Select(x => x.PredictedInput)));
                     }
                     else
                     {

@@ -105,7 +105,8 @@ public class ImageGenerator
         var useJitter = imageWithLine.useJitter;
         
         var rowStartPosition = (rowPositionInPercent * height) / 100;
-        var rowEndPosition = rowStartPosition + (lineThicknessInPercent * height) / 100;
+        //var rowEndPosition = rowStartPosition + (lineThicknessInPercent * height) / 100;
+        var rowEndPosition = rowStartPosition + 1;
         if(rowEndPosition > height)
         {
             rowEndPosition = height;
@@ -211,7 +212,9 @@ public class ImageGenerator
         }
         
         var columnStartPosition = (columnPositionInPercent * width) / 100;
-        var columnEndPosition = columnStartPosition + (lineThicknessInPercent * width) / 100;
+        //var columnEndPosition = columnStartPosition + (lineThicknessInPercent * width) / 100;
+        var columnEndPosition = columnStartPosition + 1;
+        
         if(columnEndPosition > width)
         {
             columnEndPosition = width;
@@ -302,16 +305,21 @@ public class ImageGenerator
         var rowPositionInPercent = imageWithLine.RowPositionInPercent;
         var columnPositionInPercent = imageWithLine.ColumnPositionInPercent;
         var useJitter = imageWithLine.useJitter;
+        var lineThickness = 1;
         
         var rowStartPosition = (rowPositionInPercent * height) / 100;
         
         var lineLength = (lineLengthInPercent * width) / 100;
-        var lineThickness = 1;
         var rowEndPosition = rowStartPosition + lineLength;
         if(rowEndPosition > height)
         {
             rowEndPosition = height;
         }
+        if (rowEndPosition < rowStartPosition + 10)
+        {
+            rowEndPosition = rowStartPosition + 10;
+        }
+        
         var jitterHeight = lineThickness / 3;
         
         var columnStartPosition = (columnPositionInPercent * width) / 100;
@@ -319,6 +327,10 @@ public class ImageGenerator
         if(columnEndPosition > width)
         {
             columnEndPosition = width;
+        }
+        if (columnEndPosition < columnStartPosition + 10)
+        {
+            columnEndPosition = columnStartPosition + 10;
         }
 
         var jitterWidth = width / 10;
@@ -360,7 +372,7 @@ public class ImageGenerator
                     rowNumber <= rowEndPosition &&
                     columnStartPosition <= columnNumber &&
                     columnNumber <= columnEndPosition &&
-                    Math.Abs(rowNumber - columnNumber) < lineThickness
+                    rowNumber == columnNumber
                         ? 255
                         : 0;
 
@@ -397,6 +409,7 @@ public class ImageGenerator
             _logger.LogInformation(
                 "Empty image generated: {FilePath}, {LineThicknessInPercent}, {LineLengthInPercent}, {RowPositionInPercent}, {ColumnPositionInPercent}, {UseJitter}, {RowStartPosition}, {RowEndPosition}, {ColumnStartPosition}, {ColumnEndPosition}",
                 filePath, lineThicknessInPercent, lineLengthInPercent, rowPositionInPercent, columnPositionInPercent, useJitter, rowStartPosition, rowEndPosition, columnStartPosition, columnEndPosition);
+            throw new Exception("Empty image generated.");
         }
 
         await GenerateImage(filePath, width, height, data);
