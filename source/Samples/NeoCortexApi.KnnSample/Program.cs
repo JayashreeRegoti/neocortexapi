@@ -28,6 +28,9 @@ var testDataFolderPath = "./TestData";
 
 var width = 30;
 var height = 30;
+var numberOfTrainingImages = 10;
+var numberOfTestImages = 5;
+
 var imageEncoderSettings = new BinarizerParams()
 {
     ImageHeight = height,
@@ -39,7 +42,13 @@ var imageEncoderSettings = new BinarizerParams()
 
 var createFreshInputFiles = true;
 
-await CreateInputDataSet(host.Services, trainingDataFolderPath, testDataFolderPath, createFreshInputFiles);
+await CreateInputDataSet(
+    host.Services, 
+    trainingDataFolderPath, 
+    testDataFolderPath, 
+    numberOfTrainingImages,
+    numberOfTestImages,
+    createFreshInputFiles);
 var knnClassifierFactory = host.Services.GetRequiredService<KnnClassifierFactory>();
 var predictor = await knnClassifierFactory.CreatePredictor(trainingDataFolderPath, imageEncoderSettings);
 await knnClassifierFactory.ValidateTestData(testDataFolderPath, predictor);
@@ -47,7 +56,13 @@ await knnClassifierFactory.ValidateTestData(testDataFolderPath, predictor);
 return;
 
 
-async Task CreateInputDataSet(IServiceProvider services, string trainingDataDirectoryPath, string testDataDirectoryPath, bool createFreshData = false)
+async Task CreateInputDataSet(
+    IServiceProvider services, 
+    string trainingDataDirectoryPath, 
+    string testDataDirectoryPath,
+    int numberOfTrainingImagesToCreate = 10,
+    int numberOfTestImagesToCreate = 5,
+    bool createFreshData = false)
 {
     Console.WriteLine("Creating image with lines...");
     var imageGenerator = services.GetRequiredService<ImageGenerator>();
@@ -58,13 +73,13 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
         if (Directory.Exists(testDataDirectoryPath))
         {
             Directory.Delete(testDataDirectoryPath, true);
-            await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, 10);
+            await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, numberOfTestImagesToCreate);
         }
 
         if (Directory.Exists(trainingDataDirectoryPath))
         {
             Directory.Delete(trainingDataDirectoryPath, true);
-            await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, 9);
+            await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, numberOfTrainingImagesToCreate);
         }
         
         Console.WriteLine("Completed Creating image with lines.");
@@ -77,7 +92,7 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
         }
         else
         {
-            await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, 10);
+            await imageGenerator.CreateImagesWithLine(testDataDirectoryPath, width ,height, numberOfTestImagesToCreate);
         }
     
         if(Directory.Exists(trainingDataDirectoryPath) && Directory.GetFiles(trainingDataDirectoryPath).Length > 0)
@@ -86,7 +101,7 @@ async Task CreateInputDataSet(IServiceProvider services, string trainingDataDire
         }
         else
         {
-            await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, 9);
+            await imageGenerator.CreateImagesWithLine(trainingDataDirectoryPath,width ,height, numberOfTrainingImagesToCreate);
         }
     }
     

@@ -28,7 +28,7 @@ namespace NeoCortexApi.KnnSample
             Console.WriteLine($"Hello NeocortexApi! Experiment {nameof(MultiSequenceLearning)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
-            const int numColumns = 900;
+            int numColumns = inputBits;
             
             #region Configuration
             HtmConfig cfg = new (inputDims:new [] { inputBits }, columnDims:new [] { numColumns })
@@ -63,7 +63,7 @@ namespace NeoCortexApi.KnnSample
             var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityControllerConfiguration()
             {
                 MinCycles = numUniqueInputs * 3,
-                MaxCycles = 1000,
+                MaxCycles = (int)((numUniqueInputs * 3) * 1.5),
                 NumOfCyclesToWaitOnChange = 50
             };
 

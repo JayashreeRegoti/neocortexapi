@@ -49,27 +49,29 @@ public class ImageGenerator
 
         for (int i = 0; i < numberOfImages; i++)
         {
-            var random = new Random();
 
-            var fileName = random.Next(0, 3) switch
+            var filePaths = new List<string>
             {
-                0 => $"HorizontalLine_{i}",
-                1 => $"VerticalLine_{i}",
-                _ => $"DiagonalLine_{i}"
+                Path.Combine(folderPath, $"HorizontalLine_{i}.png"),
+                Path.Combine(folderPath, $"VerticalLine_{i}.png"),
+                Path.Combine(folderPath, $"DiagonalLine_{i}.png"),
             };
 
-            var filePath = Path.Combine(folderPath, $"{fileName}.png");
-
-            imageWithLines.Add(filePath, new ImageWithLine
+            foreach (var filePath in filePaths)
             {
-                Width = width,
-                Height = height,
-                LineThicknessInPercent = 3,
-                RowPositionInPercent = random.Next(1, 60),
-                ColumnPositionInPercent = random.Next(1, 60),
-                LineLengthInPercent = random.Next(40, 100),
-                useJitter = random.Next(0, 2) == 1
-            });
+                var random = new Random();
+
+                imageWithLines.Add(filePath, new ImageWithLine
+                {
+                    Width = width,
+                    Height = height,
+                    LineThicknessInPercent = 3,
+                    RowPositionInPercent = random.Next(1, 60),
+                    ColumnPositionInPercent = random.Next(1, 60),
+                    LineLengthInPercent = random.Next(40, 100),
+                    useJitter = random.Next(0, 2) == 1
+                });
+            }
         }
         
         foreach ((string filePath, ImageWithLine imageWithLine) in imageWithLines)
