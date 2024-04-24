@@ -26,8 +26,8 @@ var host = builder.Build();
 var trainingDataFolderPath = "./TrainingData";
 var testDataFolderPath = "./TestData";
 
-var width = 30;
-var height = 30;
+var width = 40;
+var height = 40;
 var numberOfTrainingImages = 10;
 var numberOfTestImages = 5;
 
