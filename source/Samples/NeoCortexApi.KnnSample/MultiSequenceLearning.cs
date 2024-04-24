@@ -158,18 +158,17 @@ namespace NeoCortexApi.KnnSample
             // Training SP to get stable. New-born stage.
             //
 
-            for (int i = 0; i < maxCycles && isInStableState == false; i++)
+            
+            foreach (var inputs in sequences)
             {
-
-                cycle++;
-
-                _logger.LogInformation("-------------- Newborn Cycle {cycle} ---------------", cycle);
-
-                foreach (var inputs in sequences)
+                for (int i = 0; i < maxCycles && isInStableState == false; i++)
                 {
+                    _logger.LogInformation("-------------- Newborn Cycle {cycle} ---------------", i);
+
                     foreach (var input in inputs.Value)
-                    {
+                    {                        
                         _logger.LogInformation(" -- {inputsKey} - {input} --", inputs.Key, input);
+                        
                         var lyrOut = cortexLayer.Compute(input, true);
 
                         if (isInStableState)
@@ -181,6 +180,11 @@ namespace NeoCortexApi.KnnSample
                     if (isInStableState)
                     {
                         break;
+                    }
+                    
+                    if(i == maxCycles - 1)
+                    {
+                        _logger.LogInformation("-------------- Max Cycle reached ---------------");
                     }
                 }
             }
@@ -201,19 +205,17 @@ namespace NeoCortexApi.KnnSample
             foreach (var sequenceKeyPair in sequences)
             {
                 _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------", sequenceKeyPair.Key);
-                
-                // Now training with SP+TM. SP is pretrained on the given input pattern set.
                 for (int i = 0; i < maxCycles; i++)
                 {
-                    cycle++;
-
-                    _logger.LogInformation("-------------- Cycle {cycle} ---------------", cycle);
+                    _logger.LogInformation("-------------- Cycle {cycle} ---------------", i);
                     _logger.LogInformation("");
-
+                    
                     foreach (var inputFilePath in sequenceKeyPair.Value)
                     {
                         _logger.LogInformation("-------------- {inputFilePath} ---------------", inputFilePath);
-
+                    
+                        // Now training with SP+TM. SP is pretrained on the given input pattern set.
+                    
                         var lyrOut = cortexLayerWithTemporalMemory.Compute(inputFilePath, true) as ComputeCycle;
 
                         var activeColumns = cortexLayerWithTemporalMemory.GetResult("sp") as int[];
@@ -228,6 +230,11 @@ namespace NeoCortexApi.KnnSample
 
                         _logger.LogInformation("Col  SDR: {activeColumnIndices}",string.Join(",", lyrOut.ActivColumnIndicies));
                         _logger.LogInformation("Cell SDR: {activeCellIndices}", string.Join(",", actCells.Select(c => c.Index).ToArray()));
+                    }
+                    
+                    if(i == maxCycles - 1)
+                    {
+                        _logger.LogInformation("-------------- Max Cycle reached ---------------");
                     }
                 }
             }
