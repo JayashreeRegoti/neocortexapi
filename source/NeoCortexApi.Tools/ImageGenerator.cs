@@ -13,7 +13,7 @@ public class ImageGenerator
         _logger = logger;
     }
     
-    private static async Task GenerateImage(string filePath, int width, int height, int[][] data)
+    public static async Task GenerateImage(string filePath, int width, int height, int[][] data)
     {
         var bitmap = new SKBitmap(width, height);
 
