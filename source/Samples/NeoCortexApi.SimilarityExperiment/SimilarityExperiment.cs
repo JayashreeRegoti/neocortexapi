@@ -22,19 +22,21 @@ namespace NeoCortexApi.SimilarityExperiment
         }
 
         /// <summary>
-        /// Runs the learning of sequences.
+        /// Runs the similarity experiment.
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
-        public async Task<Predictor<string, string>> GeneratePredictorModel(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
+        public async Task RunExperiment(Dictionary<string, List<string>> sequences,
+            BinarizerParams imageEncoderSettings)
         {
             Console.WriteLine($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
             int numColumns = inputBits;
-            
+
             #region Configuration
-            HtmConfig cfg = new (inputDims:new [] { inputBits }, columnDims:new [] { numColumns })
+
+            HtmConfig cfg = new(inputDims: new[] { inputBits }, columnDims: new[] { numColumns })
             {
                 Random = new ThreadSafeRandom(42),
 
@@ -60,7 +62,7 @@ namespace NeoCortexApi.SimilarityExperiment
                 // Used by punishing of segments.
                 PredictedSegmentDecrement = 0.1
             };
-            
+
             var numUniqueInputs = GetNumberOfInputs(sequences);
 
             var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityControllerConfiguration()
@@ -86,30 +88,54 @@ namespace NeoCortexApi.SimilarityExperiment
             };
             */
 
-            
+
             var encoder = new ImageEncoder(imageEncoderSettings);
             // use image binarizer to encode the image as string binary and parse back into input vector and send it to sp.compute()
             // see example SchemaImageClassificationExperiment.cs
             // var imageBinarizer = new ImageBinarizer(imageEncoderSettings);
+
             #endregion
+
             _logger.LogInformation("Configuration Completed.");
-            
+
             _logger.LogInformation("Generating Predictor Model.");
-            var predictor = this.GenerateKnnModel(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
-            _logger.LogInformation("Predictor Model Generated.");
-            
-            return await predictor;
+            var outputSdrs =
+                await GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            var cls = new KNeighborsClassifier<string, int[]>();
+
+            foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
+            {
+                cls.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
+            }
+
+            foreach (var testOutputSdr in outputSdrs.Where(x => x.Key.Contains("test")))
+            {
+                _logger.LogInformation("--------------------------------------------");
+                
+                var predicted =
+                    cls.GetPredictedInputValues(
+                        testOutputSdr.Value.Select(x => new Cell(0, x)).ToArray(), 
+                        3).OrderByDescending(x => x.Similarity);
+
+                foreach (ClassifierResult<string> classifierResult in predicted)
+                {
+                    _logger.LogInformation("Prediction for {key}: {predicted}", testOutputSdr.Key,
+                        JsonSerializer.Serialize(classifierResult));
+                }
+            }
+
+            _logger.LogInformation("------------ END ------------");
         }
 
         /// <summary>
-        /// Creates the KNN model.
+        /// Creates the output sdrs.
         /// </summary>
         /// <param name="cfg"></param>
         /// <param name="homeostaticPlasticityControllerConfiguration"></param>
         /// <param name="encoder"></param>
         /// <param name="sequences"></param>
         /// <returns></returns>
-        private async Task<Predictor<string, string>> GenerateKnnModel(
+        private async Task<Dictionary<string, int[]>> GenerateOutputSdrs(
             HtmConfig cfg, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
             EncoderBase encoder, 
@@ -149,22 +175,8 @@ namespace NeoCortexApi.SimilarityExperiment
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
             
-            var cls = new KNeighborsClassifier<string, int[]>();
-
             Dictionary<string, int[]> outputSdrs = new ();
-            
-            //reorder sequences
-            var orderedSequences = new Dictionary<string, List<string>>();
-            foreach (KeyValuePair<string,List<string>> trainingSequence in sequences.Where(x => x.Key.Contains("train")))
-            {
-                orderedSequences.Add(trainingSequence.Key, trainingSequence.Value);
-            }
-            foreach (KeyValuePair<string,List<string>> testSequence in sequences.Where(x => x.Key.Contains("test")))
-            {
-                orderedSequences.Add(testSequence.Key, testSequence.Value);
-            }
-            
-            foreach (var sequenceKeyPair in orderedSequences)
+            foreach (var sequenceKeyPair in sequences)
             {
                 _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------",
                     sequenceKeyPair.Key);
@@ -178,27 +190,11 @@ namespace NeoCortexApi.SimilarityExperiment
                     outputSdrs.Add(key, lyrOut);
 
                     _logger.LogInformation("Col  SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
-
-                    if (key.Contains("train"))
-                    {
-                        cls.Learn(key, lyrOut?.Select(x => new Cell(0, x)).ToArray());
-                    }
-                    else
-                    {
-                        var predicted = cls.GetPredictedInputValues(lyrOut?.Select(x => new Cell(0, x)).ToArray(), 3);
-
-                        foreach (ClassifierResult<string> classifierResult in predicted)
-                        {
-                            _logger.LogInformation("Predicted: {predicted}", JsonSerializer.Serialize(classifierResult));
-                        }
-                    }
                 }
             }
             
             await CreateOutputSdrImages(outputSdrs);
-
-            _logger.LogInformation("------------ END ------------");
-            return new Predictor<string, string>(new CortexLayer<string, ComputeCycle>(), mem, new HtmClassifier<string, ComputeCycle>());
+            return outputSdrs;
         }
 
         private async Task CreateOutputSdrImages(Dictionary<string, int[]> outputSdrs)
