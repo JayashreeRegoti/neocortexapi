@@ -15,7 +15,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
             
             foreach (KeyValuePair<string, int[][]> inputSdr in inputSdrs)
             {
-                var inputSdrPath = Path.Combine(inputSdrDirectoryPath, $"InputSdr_{inputSdr.Key}.png");
+                var inputSdrPath = Path.Combine(inputSdrDirectoryPath, $"{inputSdr.Key}.png");
                 var inputSdrValue = inputSdr.Value;
                 var imageheight = inputSdrValue.Length;
                 var imagewidth = inputSdrValue[0].Length;

@@ -29,4 +29,4 @@ var imageEncoderSettings = new BinarizerParams()
     GreenThreshold = 128,
     BlueThreshold = 128,
 };
-experiment.GeneratePredictorModel(experiment.GetGroupedSet(inputSdrDirectoryPath), imageEncoderSettings);
+await experiment.GeneratePredictorModel(experiment.GetGroupedSet(inputSdrDirectoryPath), imageEncoderSettings);

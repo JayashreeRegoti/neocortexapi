@@ -6,6 +6,7 @@ using NeoCortexApi.Encoders;
 using NeoCortexApi.Entities;
 using NeoCortexApi.KnnSample;
 using NeoCortexApi.Network;
+using NeoCortexApi.Tools;
 using SkiaSharp;
 
 namespace NeoCortexApi.SimilarityExperiment
@@ -24,7 +25,7 @@ namespace NeoCortexApi.SimilarityExperiment
         /// </summary>
         /// <param name="sequences">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
-        public Predictor<string, string> GeneratePredictorModel(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
+        public async Task<Predictor<string, string>> GeneratePredictorModel(Dictionary<string, List<string>> sequences, BinarizerParams imageEncoderSettings)
         {
             Console.WriteLine($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
 
@@ -96,7 +97,7 @@ namespace NeoCortexApi.SimilarityExperiment
             var predictor = this.GenerateKnnModel(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
             _logger.LogInformation("Predictor Model Generated.");
             
-            return predictor;
+            return await predictor;
         }
 
         /// <summary>
@@ -107,7 +108,7 @@ namespace NeoCortexApi.SimilarityExperiment
         /// <param name="encoder"></param>
         /// <param name="sequences"></param>
         /// <returns></returns>
-        private Predictor<string, string> GenerateKnnModel(
+        private async Task<Predictor<string, string>> GenerateKnnModel(
             HtmConfig cfg, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
             EncoderBase encoder, 
@@ -146,8 +147,8 @@ namespace NeoCortexApi.SimilarityExperiment
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
-            //cortexLayerWithTemporalMemory.HtmModules.Add("tm", tm);
 
+            Dictionary<string, int[]> outputSdrs = new ();
             foreach (var sequenceKeyPair in sequences)
             {
                 _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------",
@@ -159,13 +160,43 @@ namespace NeoCortexApi.SimilarityExperiment
                     
                     var lyrOut = cortexLayer.Compute(inputFilePath, true);
                     string key = sequenceKeyPair.Key;
-                    
+                    outputSdrs.Add(key, lyrOut);
+
                     _logger.LogInformation("Col  SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
                 }
             }
+            
+            await CreateOutputSdrImages(outputSdrs);
 
             _logger.LogInformation("------------ END ------------");
             return new Predictor<string, string>(new CortexLayer<string, ComputeCycle>(), mem, new HtmClassifier<string, ComputeCycle>());
+        }
+
+        private async Task CreateOutputSdrImages(Dictionary<string, int[]> outputSdrs)
+        {
+            var outputSdrFolderPath = "./OutputSdrs";
+            if (Directory.Exists(outputSdrFolderPath))
+            {
+                Directory.Delete(outputSdrFolderPath, true);
+            }
+            Directory.CreateDirectory(outputSdrFolderPath);
+
+            foreach (var (key, value) in outputSdrs)
+            {
+                var height = 30;
+                var width = 30;
+                var imageData = new int [height][];
+                for (int i = 0; i < height; i++)
+                {
+                    imageData[i] = new int[width];
+                    for (int j = 0; j < width; j++)
+                    {
+                        imageData[i][j] = value.Contains(i*height +j) ? 255 : 0;
+                    }
+                }
+                
+                await ImageGenerator.GenerateImage(Path.Combine(outputSdrFolderPath, $"{key}.png"),width, height, imageData);
+            }
         }
 
 
