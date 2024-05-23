@@ -38,7 +38,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
         private static Dictionary<string, int[][]> inputSdrs = new Dictionary<string, int[][]>
         {
             {
-                "dots",
+                "train_dots",
                 new[]
                 {
                     new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -75,7 +75,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
             },
 
             {
-                "minus_signs",
+                "train_minus_signs",
                 new[]
                 {
                     new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -112,7 +112,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
             },
 
             {
-                "plus_signs",
+                "train_plus_signs",
                 new[]
                 {
                     new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -149,7 +149,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
             },
 
             {
-                "multiply_signs",
+                "train_multiply_signs",
                 new[]
                 {
                     new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -186,7 +186,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
             },
 
             {
-                "divide_signs",
+                "train_divide_signs",
                 new[]
                 {
                     new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },

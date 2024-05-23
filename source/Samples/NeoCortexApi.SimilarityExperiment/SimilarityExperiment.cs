@@ -138,7 +138,7 @@ namespace NeoCortexApi.SimilarityExperiment
                 },
                 homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
-            SpatialPoolerMT sp = new (hpc);
+            SpatialPooler sp = new (hpc);
             sp.Init(mem);
             _logger.LogInformation("Initialized spatial poller");
 
