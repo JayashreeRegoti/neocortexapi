@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Daenet.ImageBinarizerLib.Entities;
 using HtmImageEncoder;
 using NeoCortexApi.Classifiers;
@@ -147,9 +148,23 @@ namespace NeoCortexApi.SimilarityExperiment
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
+            
+            var cls = new KNeighborsClassifier<string, int[]>();
 
             Dictionary<string, int[]> outputSdrs = new ();
-            foreach (var sequenceKeyPair in sequences)
+            
+            //reorder sequences
+            var orderedSequences = new Dictionary<string, List<string>>();
+            foreach (KeyValuePair<string,List<string>> trainingSequence in sequences.Where(x => x.Key.Contains("train")))
+            {
+                orderedSequences.Add(trainingSequence.Key, trainingSequence.Value);
+            }
+            foreach (KeyValuePair<string,List<string>> testSequence in sequences.Where(x => x.Key.Contains("test")))
+            {
+                orderedSequences.Add(testSequence.Key, testSequence.Value);
+            }
+            
+            foreach (var sequenceKeyPair in orderedSequences)
             {
                 _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------",
                     sequenceKeyPair.Key);
@@ -163,6 +178,20 @@ namespace NeoCortexApi.SimilarityExperiment
                     outputSdrs.Add(key, lyrOut);
 
                     _logger.LogInformation("Col  SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
+
+                    if (key.Contains("train"))
+                    {
+                        cls.Learn(key, lyrOut?.Select(x => new Cell(0, x)).ToArray());
+                    }
+                    else
+                    {
+                        var predicted = cls.GetPredictedInputValues(lyrOut?.Select(x => new Cell(0, x)).ToArray(), 3);
+
+                        foreach (ClassifierResult<string> classifierResult in predicted)
+                        {
+                            _logger.LogInformation("Predicted: {predicted}", JsonSerializer.Serialize(classifierResult));
+                        }
+                    }
                 }
             }
             
