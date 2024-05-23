@@ -143,107 +143,24 @@ namespace NeoCortexApi.SimilarityExperiment
 
             int maxCycles = homeostaticPlasticityControllerConfiguration.MaxCycles;
 
-            /*
-            // Please note that we do not add here TM in the layer.
-            // This is omitted for practical reasons, because we first enter the newborn-stage of the algorithm
-            // In this stage we want that SP get boosted and see all elements before we start learning with TM.
-            // All would also work fine with TM in layer, but it would work much slower.
-            // So, to improve the speed of experiment, we first omit the TM and then after the newborn-stage we add it to the layer.
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
-            _logger.LogInformation("Added encoder and spatial poller to compute layer");
-            
-            int cycle = 0;
-            
-
-            //
-            // Training SP to get stable. New-born stage.
-            //
-
-            
-            foreach (var inputs in sequences)
-            {
-                for (int i = 0; i < maxCycles && isInStableState == false; i++)
-                {
-                    _logger.LogInformation("-------------- Newborn Cycle {cycle} ---------------", i);
-
-                    foreach (var input in inputs.Value)
-                    {                        
-                        _logger.LogInformation(" -- {inputsKey} - {input} --", inputs.Key, input);
-                        
-                        var lyrOut = cortexLayer.Compute(input, true);
-
-                        if (isInStableState)
-                        {
-                            break;
-                        }
-                    }
-
-                    if (isInStableState)
-                    {
-                        break;
-                    }
-                    
-                    if(i == maxCycles - 1)
-                    {
-                        _logger.LogInformation("-------------- Max Cycle reached ---------------");
-                    }
-                }
-            }
-
-            // Clear all learned patterns in the classifier.
-            var cls = new KNeighborsClassifier<string, ComputeCycle>();
-            cls.ClearState();
-
-            // We activate here the Temporal Memory algorithm.
-            TemporalMemory tm = new ();
-            tm.Init(mem);
-            
-            */
-            CortexLayer<string, int[]> cortexLayerWithTemporalMemory = new ("CortexLayerWithTemporalMemory");
-            cortexLayerWithTemporalMemory.HtmModules.Add("encoder", encoder);
-            cortexLayerWithTemporalMemory.HtmModules.Add("sp", sp);
             //cortexLayerWithTemporalMemory.HtmModules.Add("tm", tm);
-            
+
             foreach (var sequenceKeyPair in sequences)
             {
-                _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------", sequenceKeyPair.Key);
-                for (int i = 0; i < maxCycles; i++)
+                _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------",
+                    sequenceKeyPair.Key);
+
+                foreach (var inputFilePath in sequenceKeyPair.Value)
                 {
-                    _logger.LogInformation("-------------- Cycle {cycle} ---------------", i);
-                    _logger.LogInformation("");
+                    _logger.LogInformation("-------------- {inputFilePath} ---------------", inputFilePath);
                     
-                    foreach (var inputFilePath in sequenceKeyPair.Value)
-                    {
-                        _logger.LogInformation("-------------- {inputFilePath} ---------------", inputFilePath);
+                    var lyrOut = cortexLayer.Compute(inputFilePath, true);
+                    string key = sequenceKeyPair.Key;
                     
-                        // Now training with SP+TM. SP is pretrained on the given input pattern set.
-                    
-                        var lyrOut = cortexLayerWithTemporalMemory.Compute(inputFilePath, true);
-
-                        var activeColumns = cortexLayerWithTemporalMemory.GetResult("sp") as int[];
-
-                        string key = sequenceKeyPair.Key;
-                        
-                        _logger.LogInformation("Col  SDR for {key}: {activeColumnIndices}", key, string.Join(",", activeColumns ?? Array.Empty<int>()));
-
-                        /*
-                        List<Cell> actCells = lyrOut.ActiveCells.Count == lyrOut.WinnerCells.Count
-                            ? lyrOut.ActiveCells
-                            : lyrOut.WinnerCells;
-
-                        //cls.Learn(key, actCells.ToArray());
-
-                        _logger.LogInformation("Col  SDR: {activeColumnIndices}",string.Join(",", lyrOut.ActivColumnIndicies));
-                        _logger.LogInformation("Cell SDR: {activeCellIndices}", string.Join(",", actCells.Select(c => c.Index).ToArray()));
-                        */
-                    }
-                    
-                    if(i == maxCycles - 1)
-                    {
-                        _logger.LogInformation("-------------- Max Cycle reached ---------------");
-                    }
+                    _logger.LogInformation("Col  SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
                 }
             }
 
