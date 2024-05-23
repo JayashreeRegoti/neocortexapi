@@ -8,7 +8,6 @@ using NeoCortexApi.Entities;
 using NeoCortexApi.KnnSample;
 using NeoCortexApi.Network;
 using NeoCortexApi.Tools;
-using SkiaSharp;
 
 namespace NeoCortexApi.SimilarityExperiment
 {
@@ -71,43 +70,24 @@ namespace NeoCortexApi.SimilarityExperiment
                 MaxCycles = (int)((numUniqueInputs * 3) * 1.5),
                 NumOfCyclesToWaitOnChange = 50
             };
-
-            /*
-            double max = 20;
-
-            Dictionary<string, object> settings = new Dictionary<string, object>()
-            {
-                { "W", 15},
-                { "N", inputBits},
-                { "Radius", -1.0},
-                { "MinVal", 0.0},
-                { "Periodic", false},
-                { "Name", "scalar"},
-                { "ClipInput", false},
-                { "MaxVal", max}
-            };
-            */
-
-
+            
             var encoder = new ImageEncoder(imageEncoderSettings);
-            // use image binarizer to encode the image as string binary and parse back into input vector and send it to sp.compute()
-            // see example SchemaImageClassificationExperiment.cs
-            // var imageBinarizer = new ImageBinarizer(imageEncoderSettings);
 
             #endregion
 
             _logger.LogInformation("Configuration Completed.");
 
-            _logger.LogInformation("Generating Predictor Model.");
-            var outputSdrs =
-                await GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            _logger.LogInformation("Generating Output SDRs.");
+            var outputSdrs = await GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            
+            _logger.LogInformation("Training KNN Classifier.");
             var cls = new KNeighborsClassifier<string, int[]>();
-
             foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
             {
                 cls.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
             }
-
+            
+            _logger.LogInformation("Finding Similarity.");
             foreach (var testOutputSdr in outputSdrs.Where(x => x.Key.Contains("test")))
             {
                 _logger.LogInformation("--------------------------------------------");
@@ -168,9 +148,7 @@ namespace NeoCortexApi.SimilarityExperiment
             SpatialPooler sp = new (hpc);
             sp.Init(mem);
             _logger.LogInformation("Initialized spatial poller");
-
-            int maxCycles = homeostaticPlasticityControllerConfiguration.MaxCycles;
-
+            
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             cortexLayer.HtmModules.Add("encoder", encoder);
             cortexLayer.HtmModules.Add("sp", sp);
