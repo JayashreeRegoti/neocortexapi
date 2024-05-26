@@ -23,9 +23,9 @@ namespace NeoCortexApi.SimilarityExperiment
         /// <summary>
         /// Runs the similarity experiment.
         /// </summary>
-        /// <param name="sequences">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
+        /// <param name="inputSdrs">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
-        public async Task RunExperiment(Dictionary<string, List<string>> sequences,
+        public async Task RunExperiment(Dictionary<string, string> inputSdrs,
             BinarizerParams imageEncoderSettings)
         {
             _logger.LogInformation($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
@@ -62,7 +62,7 @@ namespace NeoCortexApi.SimilarityExperiment
                 PredictedSegmentDecrement = 0.1
             };
 
-            var numUniqueInputs = GetNumberOfInputs(sequences);
+            var numUniqueInputs = inputSdrs.Count;
 
             var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityControllerConfiguration()
             {
@@ -78,11 +78,15 @@ namespace NeoCortexApi.SimilarityExperiment
             _logger.LogInformation("Configuration Completed.");
 
             _logger.LogInformation("Generating Output SDRs.");
-            var outputSdrs = GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            var outputSdrs = GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, inputSdrs);
             
             _logger.LogInformation("Creating Output SDR Images.");
             var outputSdrFolderPath = "./OutputSdrs";
-            await CreateOutputSdrImages(outputSdrFolderPath, outputSdrs);
+            await CreateOutputSdrImages(
+                outputSdrFolderPath, 
+                outputSdrs, 
+                imageEncoderSettings.ImageHeight, 
+                imageEncoderSettings.ImageWidth);
             
             _logger.LogInformation("Training KNN Classifier.");
             var cls = new KNeighborsClassifier<string, int[]>();
@@ -117,13 +121,13 @@ namespace NeoCortexApi.SimilarityExperiment
         /// <param name="cfg"></param>
         /// <param name="homeostaticPlasticityControllerConfiguration"></param>
         /// <param name="encoder"></param>
-        /// <param name="sequences"></param>
+        /// <param name="inputSdrs"></param>
         /// <returns></returns>
         private Dictionary<string, int[]> GenerateOutputSdrs(
             HtmConfig cfg, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
             EncoderBase encoder, 
-            Dictionary<string, List<string>> sequences)
+            Dictionary<string, string> inputSdrs)
         {
             Stopwatch sw = new ();
             sw.Start();
@@ -146,16 +150,13 @@ namespace NeoCortexApi.SimilarityExperiment
             cortexLayer.HtmModules.Add("spatial_pooler", sp);
             
             Dictionary<string, int[]> outputSdrs = new ();
-            foreach (var sequenceKeyPair in sequences)
+            foreach (var inputSdr in inputSdrs)
             {
-                foreach (var inputFilePath in sequenceKeyPair.Value)
-                {
-                    var lyrOut = cortexLayer.Compute(inputFilePath, true);
-                    string key = sequenceKeyPair.Key;
-                    outputSdrs.Add(key, lyrOut);
+                var lyrOut = cortexLayer.Compute(inputSdr.Value, true);
+                string key = inputSdr.Key;
+                outputSdrs.Add(key, lyrOut);
 
-                    _logger.LogInformation("Col SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
-                }
+                _logger.LogInformation("Col SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
             }
             
             sw.Stop();
@@ -164,7 +165,11 @@ namespace NeoCortexApi.SimilarityExperiment
             return outputSdrs;
         }
 
-        private async Task CreateOutputSdrImages(string outputSdrFolderPath, Dictionary<string, int[]> outputSdrs)
+        private async Task CreateOutputSdrImages(
+            string outputSdrFolderPath, 
+            Dictionary<string, int[]> outputSdrs,
+            int imageHeight, 
+            int imageWidth)
         {
             if (Directory.Exists(outputSdrFolderPath))
             {
@@ -174,52 +179,34 @@ namespace NeoCortexApi.SimilarityExperiment
 
             foreach (var (key, value) in outputSdrs)
             {
-                var height = 30;
-                var width = 30;
-                var imageData = new int [height][];
-                for (int i = 0; i < height; i++)
+                var imageData = new int [imageHeight][];
+                for (int i = 0; i < imageHeight; i++)
                 {
-                    imageData[i] = new int[width];
-                    for (int j = 0; j < width; j++)
+                    imageData[i] = new int[imageWidth];
+                    for (int j = 0; j < imageWidth; j++)
                     {
-                        imageData[i][j] = value.Contains(i*height +j) ? 255 : 0;
+                        imageData[i][j] = value.Contains(i*imageHeight +j) ? 255 : 0;
                     }
                 }
                 
-                await ImageGenerator.GenerateImage(Path.Combine(outputSdrFolderPath, $"{key}.png"),width, height, imageData);
+                await ImageGenerator.GenerateImage(Path.Combine(outputSdrFolderPath, $"{key}.png"),imageWidth, imageHeight, imageData);
             }
         }
-
-
-        /// <summary>
-        /// Gets the number of all unique inputs.
-        /// </summary>
-        /// <param name="sequences">Alle sequences.</param>
-        /// <returns></returns>
-        private static int GetNumberOfInputs(Dictionary<string, List<string>> sequences) =>
-            sequences.Sum(inputs => inputs.Value.Count);
         
-        public Dictionary<string, List<string>> GetGroupedSet(string dataSetFolderPath)
+        public Dictionary<string, string> GetInputSdrs(string inputSdrsFolderPath)
         {
-            var groupedTrainingData = new Dictionary<string, List<string>>();
+            var inputSdrs = new Dictionary<string, string>();
             
-            var trainingFilePaths = Directory.EnumerateFiles(dataSetFolderPath, "*.png", SearchOption.TopDirectoryOnly).ToList();
+            var filePaths = Directory.EnumerateFiles(inputSdrsFolderPath, "*.png", SearchOption.TopDirectoryOnly).ToList();
             
-            foreach (string trainingFilePath in trainingFilePaths)
+            foreach (string filePath in filePaths)
             {
-                var key = Path.GetFileNameWithoutExtension(trainingFilePath);
+                var key = Path.GetFileNameWithoutExtension(filePath);
 
-                if (groupedTrainingData.ContainsKey(key))
-                {
-                    groupedTrainingData[key].Add(trainingFilePath);
-                }
-                else
-                {
-                    groupedTrainingData.Add(key, new List<string> { trainingFilePath });
-                }
+                inputSdrs.Add(key, filePath);
             }
 
-            return groupedTrainingData;
+            return inputSdrs;
         }
 
     }

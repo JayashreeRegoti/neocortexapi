@@ -29,4 +29,4 @@ var imageEncoderSettings = new BinarizerParams()
     GreenThreshold = 128,
     BlueThreshold = 128,
 };
-await experiment.RunExperiment(experiment.GetGroupedSet(inputSdrDirectoryPath), imageEncoderSettings);
+await experiment.RunExperiment(experiment.GetInputSdrs(inputSdrDirectoryPath), imageEncoderSettings);
