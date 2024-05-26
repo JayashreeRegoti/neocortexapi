@@ -337,7 +337,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
                     new[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                 }
             },
-
+            
         };
     }
 }
