@@ -4,8 +4,16 @@ namespace NeoCortexApi.SimilarityExperiment.Input
 {
     public class InputSdrCreator
     {
-        public static async Task CreateInputSdrs(string inputSdrDirectoryPath)
+        private readonly ILogger<InputSdrCreator> _logger;
+
+        public InputSdrCreator(ILogger<InputSdrCreator> logger)
         {
+            _logger = logger;
+        }
+        
+        public async Task CreateInputSdrs(string inputSdrDirectoryPath)
+        {
+            _logger.LogInformation("Creating input SDR images...");
             if(Directory.Exists(inputSdrDirectoryPath))
             {
                 Directory.Delete(inputSdrDirectoryPath, true);
@@ -32,6 +40,7 @@ namespace NeoCortexApi.SimilarityExperiment.Input
                     }
                 }
                 await ImageGenerator.GenerateImage(inputSdrPath, imagewidth, imageheight, inputImageData);
+                _logger.LogInformation("Input SDR image created at {inputSdrPath}", inputSdrPath);
             }
         }
     }

@@ -13,14 +13,16 @@ var logger = new LoggerConfiguration()
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
 
+builder.Services.AddTransient<InputSdrCreator>();
 builder.Services.AddTransient<SimilarityExperiment>();
 var host = builder.Build();
 
+logger.Information("--------------START--------------");
+var inputSdrCreator = host.Services.GetRequiredService<InputSdrCreator>();
 var inputSdrDirectoryPath = "./InputSdrs";
-await InputSdrCreator.CreateInputSdrs(inputSdrDirectoryPath);
+await inputSdrCreator.CreateInputSdrs(inputSdrDirectoryPath);
 
 var experiment = host.Services.GetRequiredService<SimilarityExperiment>();
-
 var imageEncoderSettings = new BinarizerParams()
 {
     ImageHeight = 30,
@@ -30,3 +32,4 @@ var imageEncoderSettings = new BinarizerParams()
     BlueThreshold = 128,
 };
 await experiment.RunExperiment(experiment.GetInputSdrs(inputSdrDirectoryPath), imageEncoderSettings);
+logger.Information("--------------END--------------");

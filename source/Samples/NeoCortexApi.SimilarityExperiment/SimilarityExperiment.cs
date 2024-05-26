@@ -190,7 +190,9 @@ namespace NeoCortexApi.SimilarityExperiment
                     }
                 }
                 
-                await ImageGenerator.GenerateImage(Path.Combine(outputSdrFolderPath, $"{key}.png"),imageWidth, imageHeight, imageData);
+                var filePath = Path.Combine(outputSdrFolderPath, $"{key}.png");
+                await ImageGenerator.GenerateImage(filePath,imageWidth, imageHeight, imageData);
+                _logger.LogInformation("Output SDR image created at {filePath}", filePath);
             }
         }
         
