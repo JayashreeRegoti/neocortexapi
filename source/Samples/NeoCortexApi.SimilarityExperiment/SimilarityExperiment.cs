@@ -78,7 +78,10 @@ namespace NeoCortexApi.SimilarityExperiment
             _logger.LogInformation("Configuration Completed.");
 
             _logger.LogInformation("Generating Output SDRs.");
-            var outputSdrs = await GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            var outputSdrs = GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
+            
+            _logger.LogInformation("Creating Output SDR Images.");
+            await CreateOutputSdrImages(outputSdrs);
             
             _logger.LogInformation("Training KNN Classifier.");
             var cls = new KNeighborsClassifier<string, int[]>();
@@ -115,7 +118,7 @@ namespace NeoCortexApi.SimilarityExperiment
         /// <param name="encoder"></param>
         /// <param name="sequences"></param>
         /// <returns></returns>
-        private async Task<Dictionary<string, int[]>> GenerateOutputSdrs(
+        private Dictionary<string, int[]> GenerateOutputSdrs(
             HtmConfig cfg, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
             EncoderBase encoder, 
@@ -171,7 +174,6 @@ namespace NeoCortexApi.SimilarityExperiment
                 }
             }
             
-            await CreateOutputSdrImages(outputSdrs);
             return outputSdrs;
         }
 
