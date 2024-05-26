@@ -102,6 +102,7 @@ namespace NeoCortexApi.SimilarityExperiment
             foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
             {
                 classifier.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
+                _logger.LogInformation("Training for classifier on output SDR of {key} completed.", trainingOutputSdr.Key);
             }
             
             _logger.LogInformation("Finding Similarity.");
@@ -116,7 +117,7 @@ namespace NeoCortexApi.SimilarityExperiment
 
                 foreach (ClassifierResult<string> classifierResult in predicted)
                 {
-                    _logger.LogInformation("Prediction for {key}: {predicted}", testOutputSdr.Key,
+                    _logger.LogInformation("Prediction for output sdr of {key}: {predicted}", testOutputSdr.Key,
                         JsonSerializer.Serialize(classifierResult));
                 }
             }
@@ -223,7 +224,7 @@ namespace NeoCortexApi.SimilarityExperiment
         /// </summary>
         /// <param name="inputSdrsFolderPath"></param>
         /// <returns></returns>
-        public Dictionary<string, string> GetInputSdrs(string inputSdrsFolderPath)
+        private static Dictionary<string, string> GetInputSdrs(string inputSdrsFolderPath)
         {
             var inputSdrs = new Dictionary<string, string>();
             
