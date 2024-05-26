@@ -156,7 +156,7 @@ namespace NeoCortexApi.SimilarityExperiment
                 string key = inputSdr.Key;
                 outputSdrs.Add(key, lyrOut);
 
-                _logger.LogInformation("Output SDR generated {activeColumnIndices} for {key}", 
+                _logger.LogInformation("Output SDR generated [{activeColumnIndices}] for {key}", 
                     string.Join(",", lyrOut ?? Array.Empty<int>()), key);
             }
             
