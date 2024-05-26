@@ -115,9 +115,11 @@ namespace NeoCortexApi.SimilarityExperiment
                         testOutputSdr.Value.Select(x => new Cell(0, x)).ToArray(), 
                         3).OrderByDescending(x => x.Similarity);
 
-                foreach (ClassifierResult<string> classifierResult in predicted)
+                foreach ((ClassifierResult<string> classifierResult, int index) in predicted.Select((value, index) => (value, index)))
                 {
-                    _logger.LogInformation("Prediction for output sdr of {key}: {predicted}", testOutputSdr.Key,
+                    _logger.LogInformation("Prediction {index} for output sdr of {key}: {predicted}", 
+                        index + 1,
+                        testOutputSdr.Key,
                         JsonSerializer.Serialize(classifierResult));
                 }
             }
