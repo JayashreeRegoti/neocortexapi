@@ -28,7 +28,7 @@ namespace NeoCortexApi.SimilarityExperiment
         public async Task RunExperiment(Dictionary<string, List<string>> sequences,
             BinarizerParams imageEncoderSettings)
         {
-            Console.WriteLine($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
+            _logger.LogInformation($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
             int numColumns = inputBits;
@@ -81,7 +81,8 @@ namespace NeoCortexApi.SimilarityExperiment
             var outputSdrs = GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, sequences);
             
             _logger.LogInformation("Creating Output SDR Images.");
-            await CreateOutputSdrImages(outputSdrs);
+            var outputSdrFolderPath = "./OutputSdrs";
+            await CreateOutputSdrImages(outputSdrFolderPath, outputSdrs);
             
             _logger.LogInformation("Training KNN Classifier.");
             var cls = new KNeighborsClassifier<string, int[]>();
@@ -107,7 +108,7 @@ namespace NeoCortexApi.SimilarityExperiment
                 }
             }
 
-            _logger.LogInformation("------------ END ------------");
+            _logger.LogInformation($"{nameof(SimilarityExperiment)} completed.");
         }
 
         /// <summary>
@@ -127,25 +128,13 @@ namespace NeoCortexApi.SimilarityExperiment
             Stopwatch sw = new ();
             sw.Start();
 
-            bool isInStableState = false;
             Connections mem = new (cfg);
             
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
             HomeostaticPlasticityController hpc = new (
                 mem,
                 homeostaticPlasticityControllerConfiguration.MinCycles,
-                (isStable, numPatterns, _, seenInputs) =>
-                {
-                    _logger.LogInformation(
-                        "Stable: {isStable}, Patterns: {numPatterns}, Inputs: {seenInputs}, iteration: {iteration}",
-                        isStable, numPatterns, seenInputs, seenInputs / numPatterns);
-                   
-                    // We are not learning in unstable state.
-                    isInStableState = isStable;
-
-                    // Clear active and predictive cells.
-                    //tm.Reset(mem);
-                },
+                (_, _, _, _) => { },
                 homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
             SpatialPooler sp = new (hpc);
@@ -154,32 +143,29 @@ namespace NeoCortexApi.SimilarityExperiment
             
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
             cortexLayer.HtmModules.Add("encoder", encoder);
-            cortexLayer.HtmModules.Add("sp", sp);
+            cortexLayer.HtmModules.Add("spatial_pooler", sp);
             
             Dictionary<string, int[]> outputSdrs = new ();
             foreach (var sequenceKeyPair in sequences)
             {
-                _logger.LogInformation("-------------- Sequences {sequenceKeyPairKey} ---------------",
-                    sequenceKeyPair.Key);
-
                 foreach (var inputFilePath in sequenceKeyPair.Value)
                 {
-                    _logger.LogInformation("-------------- {inputFilePath} ---------------", inputFilePath);
-                    
                     var lyrOut = cortexLayer.Compute(inputFilePath, true);
                     string key = sequenceKeyPair.Key;
                     outputSdrs.Add(key, lyrOut);
 
-                    _logger.LogInformation("Col  SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
+                    _logger.LogInformation("Col SDR for {key}: {activeColumnIndices}", key, string.Join(",", lyrOut ?? Array.Empty<int>()));
                 }
             }
+            
+            sw.Stop();
+            _logger.LogInformation("Generating Output SDRs took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
             
             return outputSdrs;
         }
 
-        private async Task CreateOutputSdrImages(Dictionary<string, int[]> outputSdrs)
+        private async Task CreateOutputSdrImages(string outputSdrFolderPath, Dictionary<string, int[]> outputSdrs)
         {
-            var outputSdrFolderPath = "./OutputSdrs";
             if (Directory.Exists(outputSdrFolderPath))
             {
                 Directory.Delete(outputSdrFolderPath, true);
