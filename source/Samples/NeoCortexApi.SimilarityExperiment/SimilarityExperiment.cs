@@ -25,17 +25,17 @@ namespace NeoCortexApi.SimilarityExperiment
         /// </summary>
         /// <param name="inputSdrs">Dictionary of sequences. KEY is the sequence name, the VALUE is the list of element of the sequence.</param>
         /// <param name="imageEncoderSettings"></param>
-        public async Task RunExperiment(Dictionary<string, string> inputSdrs,
-            BinarizerParams imageEncoderSettings)
+        public async Task RunExperiment(string inputSdrsFolderPath, BinarizerParams imageEncoderSettings)
         {
             _logger.LogInformation($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
 
             int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
             int numColumns = inputBits;
+            var inputSdrs = GetInputSdrs(inputSdrsFolderPath);
 
             #region Configuration
 
-            HtmConfig cfg = new(inputDims: new[] { inputBits }, columnDims: new[] { numColumns })
+            HtmConfig htmConfig = new(inputDims: new[] { inputBits }, columnDims: new[] { numColumns })
             {
                 Random = new ThreadSafeRandom(42),
 
@@ -72,13 +72,18 @@ namespace NeoCortexApi.SimilarityExperiment
             };
             
             var encoder = new ImageEncoder(imageEncoderSettings);
+            _logger.LogInformation("Configuration Completed.");
 
             #endregion
 
-            _logger.LogInformation("Configuration Completed.");
-
+            #region Generate Output SDRs
+            
             _logger.LogInformation("Generating Output SDRs.");
-            var outputSdrs = GenerateOutputSdrs(cfg, homeostaticPlasticityControllerConfiguration, encoder, inputSdrs);
+            var outputSdrs = GenerateOutputSdrs(
+                htmConfig, 
+                homeostaticPlasticityControllerConfiguration, 
+                encoder, 
+                inputSdrs);
             
             _logger.LogInformation("Creating Output SDR Images.");
             var outputSdrFolderPath = "./OutputSdrs";
@@ -88,11 +93,15 @@ namespace NeoCortexApi.SimilarityExperiment
                 imageEncoderSettings.ImageHeight, 
                 imageEncoderSettings.ImageWidth);
             
+            #endregion
+
+            #region Train KNN classifier using training output SDRs and Predict test output SDRs
+            
             _logger.LogInformation("Training KNN Classifier.");
-            var cls = new KNeighborsClassifier<string, int[]>();
+            var classifier = new KNeighborsClassifier<string, int[]>();
             foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
             {
-                cls.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
+                classifier.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
             }
             
             _logger.LogInformation("Finding Similarity.");
@@ -101,7 +110,7 @@ namespace NeoCortexApi.SimilarityExperiment
                 _logger.LogInformation("--------------------------------------------");
                 
                 var predicted =
-                    cls.GetPredictedInputValues(
+                    classifier.GetPredictedInputValues(
                         testOutputSdr.Value.Select(x => new Cell(0, x)).ToArray(), 
                         3).OrderByDescending(x => x.Similarity);
 
@@ -111,53 +120,57 @@ namespace NeoCortexApi.SimilarityExperiment
                         JsonSerializer.Serialize(classifierResult));
                 }
             }
-
+            #endregion
+            
             _logger.LogInformation($"{nameof(SimilarityExperiment)} completed.");
         }
 
         /// <summary>
         /// Creates the output sdrs.
         /// </summary>
-        /// <param name="cfg"></param>
+        /// <param name="htmConfig"></param>
         /// <param name="homeostaticPlasticityControllerConfiguration"></param>
         /// <param name="encoder"></param>
         /// <param name="inputSdrs"></param>
         /// <returns></returns>
         private Dictionary<string, int[]> GenerateOutputSdrs(
-            HtmConfig cfg, 
+            HtmConfig htmConfig, 
             HomeostaticPlasticityControllerConfiguration homeostaticPlasticityControllerConfiguration, 
             EncoderBase encoder, 
             Dictionary<string, string> inputSdrs)
         {
+            // Start stopwatch for measuring the time of generating output SDRs.
             Stopwatch sw = new ();
             sw.Start();
 
-            Connections mem = new (cfg);
-            
+            Connections mem = new (htmConfig);
             // For more information see following paper: https://www.scitepress.org/Papers/2021/103142/103142.pdf
-            HomeostaticPlasticityController hpc = new (
+            HomeostaticPlasticityController homeostaticPlasticityController = new (
                 mem,
                 homeostaticPlasticityControllerConfiguration.MinCycles,
                 (_, _, _, _) => { },
                 homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
-            SpatialPooler sp = new (hpc);
+            // Initialize spatial poller.
+            SpatialPooler sp = new (homeostaticPlasticityController);
             sp.Init(mem);
             _logger.LogInformation("Initialized spatial poller");
             
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
+            // Add encoder and spatial poller to the cortex layer.
             cortexLayer.HtmModules.Add("encoder", encoder);
-            cortexLayer.HtmModules.Add("spatial_pooler", sp);
+            cortexLayer.HtmModules.Add("spatial_poller", sp);
             
             Dictionary<string, int[]> outputSdrs = new ();
             foreach (var inputSdr in inputSdrs)
             {
-                var lyrOut = cortexLayer.Compute(inputSdr.Value, true);
+                // Compute the active columns for the input SDR.
+                var activeColumnsArr = cortexLayer.Compute(inputSdr.Value, true);
                 string key = inputSdr.Key;
-                outputSdrs.Add(key, lyrOut);
+                outputSdrs.Add(key, activeColumnsArr);
 
                 _logger.LogInformation("Output SDR generated [{activeColumnIndices}] for {key}", 
-                    string.Join(",", lyrOut ?? Array.Empty<int>()), key);
+                    string.Join(",", activeColumnsArr ?? Array.Empty<int>()), key);
             }
             
             sw.Stop();
@@ -166,6 +179,13 @@ namespace NeoCortexApi.SimilarityExperiment
             return outputSdrs;
         }
 
+        /// <summary>
+        /// Creates the output sdr images.
+        /// </summary>
+        /// <param name="outputSdrFolderPath"></param>
+        /// <param name="outputSdrs"></param>
+        /// <param name="imageHeight"></param>
+        /// <param name="imageWidth"></param>
         private async Task CreateOutputSdrImages(
             string outputSdrFolderPath, 
             Dictionary<string, int[]> outputSdrs,
@@ -178,6 +198,7 @@ namespace NeoCortexApi.SimilarityExperiment
             }
             Directory.CreateDirectory(outputSdrFolderPath);
 
+            // Create output SDR images.
             foreach (var (key, value) in outputSdrs)
             {
                 var imageData = new int [imageHeight][];
@@ -186,6 +207,7 @@ namespace NeoCortexApi.SimilarityExperiment
                     imageData[i] = new int[imageWidth];
                     for (int j = 0; j < imageWidth; j++)
                     {
+                        // Set the pixel value to 255 if the active column index is present in the output SDR.
                         imageData[i][j] = value.Contains(i*imageHeight +j) ? 255 : 0;
                     }
                 }
@@ -196,6 +218,11 @@ namespace NeoCortexApi.SimilarityExperiment
             }
         }
         
+        /// <summary>
+        /// Fetches the input SDRs file names from the input SDRs folder.
+        /// </summary>
+        /// <param name="inputSdrsFolderPath"></param>
+        /// <returns></returns>
         public Dictionary<string, string> GetInputSdrs(string inputSdrsFolderPath)
         {
             var inputSdrs = new Dictionary<string, string>();
