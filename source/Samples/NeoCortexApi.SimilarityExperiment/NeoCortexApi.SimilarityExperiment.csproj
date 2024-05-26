@@ -17,6 +17,5 @@
       <ProjectReference Include="..\..\NeoCortexApi.Tools\NeoCortexApi.Tools.csproj" />
       <ProjectReference Include="..\..\NeoCortexApi\NeoCortexApi.csproj" />
       <ProjectReference Include="..\..\NeoCortexEntities\NeoCortexEntities.csproj" />
-      <ProjectReference Include="..\NeoCortexApi.KnnSample\NeoCortexApi.KnnSample.csproj" />
     </ItemGroup>
 </Project>

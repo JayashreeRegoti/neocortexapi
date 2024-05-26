@@ -5,8 +5,8 @@ using HtmImageEncoder;
 using NeoCortexApi.Classifiers;
 using NeoCortexApi.Encoders;
 using NeoCortexApi.Entities;
-using NeoCortexApi.KnnSample;
 using NeoCortexApi.Network;
+using NeoCortexApi.SimilarityExperiment.Configuration;
 using NeoCortexApi.Tools;
 
 namespace NeoCortexApi.SimilarityExperiment
