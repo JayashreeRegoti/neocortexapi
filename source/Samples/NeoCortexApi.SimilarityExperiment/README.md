@@ -7,7 +7,7 @@
 
 # Implementation
 
-
+The Neocortex API is used to design and integrate the KNN (K-Nearest-Neighbor) Classifier. To train the model, it receives a series of values and preassigned labels. The user can provide unclassified sequences that require labeling after the model (a dictionary mapping of labels to their sequences) has been trained. 
 
 
 ## Generate Training & Test Input SDR images
