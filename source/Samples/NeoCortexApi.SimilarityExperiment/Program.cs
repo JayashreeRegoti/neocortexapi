@@ -33,3 +33,4 @@ var imageEncoderSettings = new BinarizerParams()
 };
 await experiment.RunExperiment(inputSdrDirectoryPath, imageEncoderSettings);
 logger.Information("--------------END--------------");
+Console.ReadLine(); 
