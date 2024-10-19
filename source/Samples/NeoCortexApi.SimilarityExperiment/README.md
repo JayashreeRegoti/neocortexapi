@@ -45,6 +45,23 @@
 </div>
      
 
+-  Input SDR is defined in 2D array, instead of giving images we used this method so we have the exact dimension of image and find similarity have more accuracy.
+
+![Input Sdr Data](InputSdrData.png)
+
+
+- Later, we can find the input SDRs has been stored in InputSdrs folder. Input SDR images are stored in the below fashion.
+
+![Input S D R Images](InputSDRImages.png)
+
+
+
+ <div class= "grey">
+
+    var inputSdrs = InputSdrData.GetInputSdrs();
+
+</div>
+
 
 
 
