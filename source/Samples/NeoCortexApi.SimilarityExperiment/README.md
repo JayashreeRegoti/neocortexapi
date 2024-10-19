@@ -14,10 +14,6 @@
 
 -  The below method is used to create input sdrs 
 
-<style>.grey{
-    background-color: #f1f2f3;}
- </style>
-
  <div class= "grey">
 
     *public async Task CreateInputSdrs(string inputSdrDirectoryPath)*
