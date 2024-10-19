@@ -11,13 +11,16 @@
 
 
 ## Generate Training & Test Input SDR images
+
+-  The below method is used to create input sdrs 
+
 <style>.grey{
     background-color: #f1f2f3;}
  </style>
 
  <div class= "grey">
 
-***public async Task CreateInputSdrs(string inputSdrDirectoryPath)***
+    *public async Task CreateInputSdrs(string inputSdrDirectoryPath)*
 
 </div>
 
@@ -25,11 +28,22 @@
 
 ![File1](file1.png)
 
-The above method is used to create input sdrs 
+- In the file location if the Inputsdrs folder exists then it deletes the folder and creates the new 'inputsdrs' folder
+
+    *if(Directory.Exists(inputSdrDirectoryPath))
+            {*
+                *Directory.Delete(inputSdrDirectoryPath, true);
+            }*
+            *Directory.CreateDirectory(inputSdrDirectoryPath);*
+
+
+- It is calling each input sdr which is defined in InputSdrData.cs program.
+
+    *var inputSdrs = InputSdrData.GetInputSdrs();*
 
 
 
-In the file location if the Inputsdrs folder exists then it deletes the folder and creates the new 'inputsdrs folder'
+
 
 
 ## Start Similarity Experiment
