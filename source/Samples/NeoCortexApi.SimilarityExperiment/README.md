@@ -23,9 +23,7 @@
 
 - In the file location if the Inputsdrs folder exists then it deletes the folder and creates the new 'inputsdrs' folder
 
-    <div class= "grey">
-
-    if(Directory.Exists(inputSdrDirectoryPath))
+    <div class= "grey"> if(Directory.Exists(inputSdrDirectoryPath))
             
             {
                 Directory.Delete(inputSdrDirectoryPath, true);
@@ -39,7 +37,9 @@
 
 - It is calling each input sdr which is defined in InputSdrData.cs program.
 
-    *var inputSdrs = InputSdrData.GetInputSdrs();*
+     <div class= "grey"> 
+     var inputSdrs = InputSdrData.GetInputSdrs();
+     </div>
 
 
 
