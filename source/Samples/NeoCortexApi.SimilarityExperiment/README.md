@@ -11,7 +11,7 @@
 
 
 ## Generate Training & Test Input SDR images
-|<style>.grey{
+<style>.grey{
     background-color: #f1f2f3;}
  </style>
 
