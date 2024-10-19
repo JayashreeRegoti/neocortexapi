@@ -114,6 +114,11 @@ namespace NeoCortexApi.SimilarityExperiment
                     classifier.GetPredictedInputValues(
                         testOutputSdr.Value.Select(x => new Cell(0, x)).ToArray(), 
                         3).OrderByDescending(x => x.Similarity);
+                
+                if (!predicted.Any())
+                {
+                    _logger.LogInformation("No Prediction for output sdr of {key}", testOutputSdr.Key);
+                }
 
                 foreach ((ClassifierResult<string> classifierResult, int index) in predicted.Select((value, index) => (value, index)))
                 {
