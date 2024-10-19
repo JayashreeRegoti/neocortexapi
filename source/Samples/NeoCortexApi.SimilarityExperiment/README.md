@@ -49,6 +49,10 @@
 
 ![Input Sdr Data](InputSdrData.png)
 
+- The input SDRs are being created
+
+![Creating Input Sdrs](CreatingInputSdrs.png)
+
 
 - Later, we can find the input SDRs has been stored in InputSdrs folder. Input SDR images are stored in the below fashion.
 
@@ -130,12 +134,86 @@ In Homeostatic Plasticity Controller configuration we have set the minimum cycle
 
 ## Spatial Pooler
 
+![Initializing Spatial Spoller](InitializingSpatialSpoller.png)
+
+### Generate Output SDRs
+
+ <div class= "grey">
+
+     logger.LogInformation("Generating Output SDRs.");
+            var outputSdrs = GenerateOutputSdrs(
+                htmConfig, 
+                homeostaticPlasticityControllerConfiguration, 
+                encoder, 
+                inputSdrs);
+
+</div>
+
+
+### Creating Output SDRs Images
+
+<div class= "grey">
+
+     _logger.LogInformation("Creating Output SDR Images.");
+            var outputSdrFolderPath = "./OutputSdrs";
+            await CreateOutputSdrImages(
+                outputSdrFolderPath, 
+                outputSdrs, 
+                imageEncoderSettings.ImageHeight, 
+                imageEncoderSettings.ImageWidth);
+           
+
+</div>
+
+![Creating Output Sdrs](CreatingOutputSdrs.png)
+
+
 ## Training & Test Output SDRs
+
+Train KNN classifier using training output SDRs and Predict test output SDRs
+
+We are assigning KNeighborsClassifier, here we will call all the training output sdr from the output sdrs folder. 
+
+
+<div class= "grey">
+
+     var classifier = new KNeighborsClassifier<string, int[]>();
+     foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
+          
+
+</div>
+ 
+
+The classifier will then learn and get trained be output SDRs.
+
+<div class= "grey">
+
+     classifier.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
+          
+
+</div>
+
+![Training K N N C Lassifier](TrainingKNNCLassifier.png)
 
 ## Foreach Output SDR
 
 ## Find Similarity via Classifier
 
+We will call all the test output sdrs from the output sdrs folder. 
+
+<div class= "grey">
+
+    foreach (var testOutputSdr in outputSdrs.Where(x => x.Key.Contains("test")))          
+
+</div>
+
+After the prediction is complete the it will take top 3 prediction based on highest similarities, with the number of similar bits and the percentage of similarity.
+
+![Similarity Output](SimilarityOutput.png)
+
+
+
+# Flow Chart of Experiment
 
 ![File](file.png)
 
