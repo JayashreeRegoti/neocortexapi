@@ -18,4 +18,8 @@
       <ProjectReference Include="..\..\NeoCortexApi\NeoCortexApi.csproj" />
       <ProjectReference Include="..\..\NeoCortexEntities\NeoCortexEntities.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Documentation\Readme\" />
+    </ItemGroup>
 </Project>

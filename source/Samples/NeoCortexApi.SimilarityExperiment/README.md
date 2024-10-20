@@ -43,16 +43,16 @@ var inputSdrs = InputSdrData.GetInputSdrs();
 
 -  Input SDR is defined in 2D array, instead of giving images we used this method so we have the exact dimension of image and find similarity have more accuracy.
 
-![Input Sdr Data](InputSdrData.png)
+![Input Sdr Data](./Documentation/Readme/Images/InputSdrData.png)
 
 - The input SDRs are being created
 
-![Creating Input Sdrs](CreatingInputSdrs.png)
+![Creating Input Sdrs](./Documentation/Readme/Images/CreatingInputSdrs.png)
 
 
 - Later, we can find the input SDRs has been stored in InputSdrs folder. Input SDR images are stored in the below fashion.
 
-![Input S D R Images](InputSDRImages.png)
+![Input S D R Images](./Documentation/Readme/Images/InputSDRImages.png)
 
 
 
@@ -124,7 +124,7 @@ var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityCont
 
 ## Spatial Pooler
 
-![Initializing Spatial Spoller](InitializingSpatialSpoller.png)
+![Initializing Spatial Spoller](./Documentation/Readme/Images/InitializingSpatialSpoller.png)
 
 ### Generate Output SDRs
 
@@ -149,7 +149,7 @@ await CreateOutputSdrImages(
     imageEncoderSettings.ImageWidth);
 ```
 
-![Creating Output Sdrs](CreatingOutputSdrs.png)
+![Creating Output Sdrs](./Documentation/Readme/Images/CreatingOutputSdrs.png)
 
 
 ## Training & Test Output SDRs
@@ -171,7 +171,7 @@ The classifier will then learn and get trained be output SDRs.
 classifier.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());        
 ```
 
-![Training K N N C Lassifier](TrainingKNNCLassifier.png)
+![Training K N N C Lassifier](./Documentation/Readme/Images/TrainingKNNCLassifier.png)
 
 ## Foreach Output SDR
 
@@ -185,13 +185,13 @@ foreach (var testOutputSdr in outputSdrs.Where(x => x.Key.Contains("test")))
 
 After the prediction is complete the it will take top 3 prediction based on highest similarities, with the number of similar bits and the percentage of similarity.
 
-![Similarity Output](SimilarityOutput.png)
+![Similarity Output](./Documentation/Readme/Images/SimilarityOutput.png)
 
 
 
 # Flow Chart of Experiment
 
-![File](file.png)
+![File](./Documentation/Readme/Images/file.png)
 
 
 
