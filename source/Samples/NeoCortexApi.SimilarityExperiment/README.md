@@ -14,35 +14,31 @@ The Neocortex API is used to design and integrate the KNN (K-Nearest-Neighbor) C
 
 -  The below method is used to create input sdrs 
 
- <div class= "grey">
-
-    public async Task CreateInputSdrs(string inputSdrDirectoryPath)
-
-</div>
-
+```
+public async Task CreateInputSdrs(string inputSdrDirectoryPath)
+```
 
 - In the file location if the Inputsdrs folder exists then it deletes the folder and creates the new 'inputsdrs' folder
 
-<div class= "grey">
+```
 
-    if(Directory.Exists(inputSdrDirectoryPath))
-            {
-                Directory.Delete(inputSdrDirectoryPath, true);
-            }
-            
-            Directory.CreateDirectory(inputSdrDirectoryPath);
+if(Directory.Exists(inputSdrDirectoryPath))
+{
+    Directory.Delete(inputSdrDirectoryPath, true);
+}
 
-</div> 
+Directory.CreateDirectory(inputSdrDirectoryPath);
+``` 
     
 
 
 - It is calling each input sdr which is defined in InputSdrData.cs program.
 
- <div class= "grey">
+```
 
-    var inputSdrs = InputSdrData.GetInputSdrs();
+var inputSdrs = InputSdrData.GetInputSdrs();
 
-</div>
+```
      
 
 -  Input SDR is defined in 2D array, instead of giving images we used this method so we have the exact dimension of image and find similarity have more accuracy.
@@ -69,62 +65,56 @@ The Neocortex API is used to design and integrate the KNN (K-Nearest-Neighbor) C
 
 
 
- <div class= "grey">
+```
+ public async Task RunExperiment(string inputSdrsFolderPath, BinarizerParams imageEncoderSettings)
+    {
+        _logger.LogInformation($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
 
-     public async Task RunExperiment(string inputSdrsFolderPath, BinarizerParams imageEncoderSettings)
-        {
-            _logger.LogInformation($"Hello NeocortexApi! Running {nameof(SimilarityExperiment)}");
-
-            int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
-            int numColumns = inputBits;
-            var inputSdrs = GetInputSdrs(inputSdrsFolderPath);
-
-</div>
+        int inputBits = imageEncoderSettings.ImageHeight * imageEncoderSettings.ImageWidth;
+        int numColumns = inputBits;
+        var inputSdrs = GetInputSdrs(inputSdrsFolderPath);
+```
 
 ### Configuration
 
  In HTMConfig we used the standard configuration as mentioned below, 
-<div class= "grey">
+```
+CellsPerColumn = 30,
+GlobalInhibition = true,
+LocalAreaDensity = -1,
+NumActiveColumnsPerInhArea = 0.02 * numColumns,
+PotentialRadius = (int)(0.15 * inputBits),
+//InhibitionRadius = 15,
 
-     CellsPerColumn = 30,
-                GlobalInhibition = true,
-                LocalAreaDensity = -1,
-                NumActiveColumnsPerInhArea = 0.02 * numColumns,
-                PotentialRadius = (int)(0.15 * inputBits),
-                //InhibitionRadius = 15,
+MaxBoost = 10.0,
+DutyCyclePeriod = 25,
+MinPctOverlapDutyCycles = 0.75,
+MaxSynapsesPerSegment = (int)(0.02 * numColumns),
 
-                MaxBoost = 10.0,
-                DutyCyclePeriod = 25,
-                MinPctOverlapDutyCycles = 0.75,
-                MaxSynapsesPerSegment = (int)(0.02 * numColumns),
+ActivationThreshold = 15,
+SynPermConnected = 0.5,
 
-                ActivationThreshold = 15,
-                SynPermConnected = 0.5,
+// Learning is slower than forgetting in this case.
+PermanenceDecrement = 0.25,
+PermanenceIncrement = 0.15,
 
-                // Learning is slower than forgetting in this case.
-                PermanenceDecrement = 0.25,
-                PermanenceIncrement = 0.15,
+// Used by punishing of segments.
+PredictedSegmentDecrement = 0.1
 
-                // Used by punishing of segments.
-                PredictedSegmentDecrement = 0.1
-
-</div>
-
+```
 In Homeostatic Plasticity Controller configuration we have set the minimum cycles as 3 times the count of input sdrs and maximum cycles as 4.5 times the count of input sdrs 
 
- <div class= "grey">
+```
+ var numUniqueInputs = inputSdrs.Count;
 
-     var numUniqueInputs = inputSdrs.Count;
+var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityControllerConfiguration()
+{
+    MinCycles = numUniqueInputs * 3,
+    MaxCycles = (int)((numUniqueInputs * 3) * 1.5),
+    NumOfCyclesToWaitOnChange = 50
+};
 
-            var homeostaticPlasticityControllerConfiguration = new HomeostaticPlasticityControllerConfiguration()
-            {
-                MinCycles = numUniqueInputs * 3,
-                MaxCycles = (int)((numUniqueInputs * 3) * 1.5),
-                NumOfCyclesToWaitOnChange = 50
-            };
-
-</div>
-
+```
 
 ## Fetching Training & TestInput SDR images
 
@@ -138,32 +128,26 @@ In Homeostatic Plasticity Controller configuration we have set the minimum cycle
 
 ### Generate Output SDRs
 
- <div class= "grey">
-
-     logger.LogInformation("Generating Output SDRs.");
-            var outputSdrs = GenerateOutputSdrs(
-                htmConfig, 
-                homeostaticPlasticityControllerConfiguration, 
-                encoder, 
-                inputSdrs);
-
-</div>
-
+```
+logger.LogInformation("Generating Output SDRs.");
+var outputSdrs = GenerateOutputSdrs(
+    htmConfig, 
+    homeostaticPlasticityControllerConfiguration, 
+    encoder, 
+    inputSdrs);
+```
 
 ### Creating Output SDRs Images
 
-<div class= "grey">
-
-     _logger.LogInformation("Creating Output SDR Images.");
-            var outputSdrFolderPath = "./OutputSdrs";
-            await CreateOutputSdrImages(
-                outputSdrFolderPath, 
-                outputSdrs, 
-                imageEncoderSettings.ImageHeight, 
-                imageEncoderSettings.ImageWidth);
-           
-
-</div>
+```
+_logger.LogInformation("Creating Output SDR Images.");
+var outputSdrFolderPath = "./OutputSdrs";
+await CreateOutputSdrImages(
+    outputSdrFolderPath, 
+    outputSdrs, 
+    imageEncoderSettings.ImageHeight, 
+    imageEncoderSettings.ImageWidth);
+```
 
 ![Creating Output Sdrs](CreatingOutputSdrs.png)
 
@@ -175,23 +159,17 @@ Train KNN classifier using training output SDRs and Predict test output SDRs
 We are assigning KNeighborsClassifier, here we will call all the training output sdr from the output sdrs folder. 
 
 
-<div class= "grey">
-
-     var classifier = new KNeighborsClassifier<string, int[]>();
-     foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
-          
-
-</div>
+```
+var classifier = new KNeighborsClassifier<string, int[]>();
+foreach (var trainingOutputSdr in outputSdrs.Where(x => x.Key.Contains("train")))
+```
  
 
 The classifier will then learn and get trained be output SDRs.
 
-<div class= "grey">
-
-     classifier.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());
-          
-
-</div>
+```
+classifier.Learn(trainingOutputSdr.Key, trainingOutputSdr.Value.Select(x => new Cell(0, x)).ToArray());        
+```
 
 ![Training K N N C Lassifier](TrainingKNNCLassifier.png)
 
@@ -201,11 +179,9 @@ The classifier will then learn and get trained be output SDRs.
 
 We will call all the test output sdrs from the output sdrs folder. 
 
-<div class= "grey">
-
-    foreach (var testOutputSdr in outputSdrs.Where(x => x.Key.Contains("test")))          
-
-</div>
+```
+foreach (var testOutputSdr in outputSdrs.Where(x => x.Key.Contains("test")))          
+```
 
 After the prediction is complete the it will take top 3 prediction based on highest similarities, with the number of similar bits and the percentage of similarity.
 
