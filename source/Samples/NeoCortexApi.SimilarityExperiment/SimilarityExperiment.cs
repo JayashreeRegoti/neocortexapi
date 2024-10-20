@@ -159,15 +159,15 @@ namespace NeoCortexApi.SimilarityExperiment
                 (_, _, _, _) => { },
                 homeostaticPlasticityControllerConfiguration.NumOfCyclesToWaitOnChange);
 
-            // Initialize spatial poller.
+            // Initialize spatial pooler.
             SpatialPooler sp = new (homeostaticPlasticityController);
             sp.Init(mem);
-            _logger.LogInformation("Initialized spatial poller");
+            _logger.LogInformation("Initialized spatial pooler");
             
             CortexLayer<string, int[]> cortexLayer = new ("CortexLayer");
-            // Add encoder and spatial poller to the cortex layer.
+            // Add encoder and spatial pooler to the cortex layer.
             cortexLayer.HtmModules.Add("encoder", encoder);
-            cortexLayer.HtmModules.Add("spatial_poller", sp);
+            cortexLayer.HtmModules.Add("spatial_pooler", sp);
             
             Dictionary<string, int[]> outputSdrs = new ();
             foreach (var inputSdr in inputSdrs)
