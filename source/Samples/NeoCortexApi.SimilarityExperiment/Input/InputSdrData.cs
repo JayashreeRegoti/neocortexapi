@@ -1,7 +1,15 @@
 namespace NeoCortexApi.SimilarityExperiment.Input
 {
+    /// <summary>
+    /// Input SDR data class to store input SDR images in 2D array of 1 and 0 values.
+    /// It holds input SDR images for training and testing.
+    /// </summary>
     public class InputSdrData
     {
+        /// <summary>
+        /// Get input SDR images for training and testing.
+        /// </summary>
+        /// <returns>Key and Value with Key being name of the image and value being the 2D array of 1's and 0's</returns>
         public static Dictionary<string, int[][]> GetInputSdrs() => InputSdrs;
         private static readonly Dictionary<string, int[][]> InputSdrs = new Dictionary<string, int[][]>
         {

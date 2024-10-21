@@ -3,6 +3,9 @@ using SkiaSharp;
 
 namespace NeoCortexApi.Tools;
 
+/// <summary>
+/// Image generator class to generate images with given image data of 2D array of pixel values.
+/// </summary>
 public class ImageGenerator
 {
         
@@ -13,8 +16,19 @@ public class ImageGenerator
         _logger = logger;
     }
     
+    /// <summary>
+    /// This method generates an image with given image data of 2D array of pixel values.
+    /// </summary>
+    /// <param name="filePath">file path to store the generated image</param>
+    /// <param name="width">width of the generated image</param>
+    /// <param name="height">height of the generated image</param>
+    /// <param name="data">
+    /// image data represented as a 2D of values ranging from 1 to 255.
+    /// Same value is set to all three RGB(Red, Green and Blue) pixels
+    /// </param>
     public static async Task GenerateImage(string filePath, int width, int height, int[][] data)
     {
+        // create a new image canvas with given width and height
         var bitmap = new SKBitmap(width, height);
 
         for (int rowNumber = 0; rowNumber < height; rowNumber++)
@@ -23,6 +37,7 @@ public class ImageGenerator
             {
                 var value= data[rowNumber][columnNumber];
                 
+                // set the pixel value in the image
                 // x-axis is columnNumber
                 // y-axis is rowNumber
                 bitmap.SetPixel(columnNumber, rowNumber , new SKColor(
@@ -32,11 +47,21 @@ public class ImageGenerator
             }
         }
 
+        // encode the image in PNG format with 80% quality
         using var skData = bitmap.Encode(SKEncodedImageFormat.Png, 80);
+        
+        // save the image to the file path
         await using var stream = File.OpenWrite(filePath);
         skData.SaveTo(stream);
     }
 
+    /// <summary>
+    /// Create images with horizontal, vertical and diagonal lines.
+    /// </summary>
+    /// <param name="folderPath">folder to save the image in</param>
+    /// <param name="width">width of the image</param>
+    /// <param name="height">height of the image</param>
+    /// <param name="numberOfImages">number of images to create</param>
     public async Task CreateImagesWithLine(string folderPath, int width, int height, int numberOfImages = 1)
     {
         if(Directory.Exists(folderPath))
