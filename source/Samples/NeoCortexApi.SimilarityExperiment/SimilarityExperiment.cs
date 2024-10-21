@@ -184,7 +184,7 @@ namespace NeoCortexApi.SimilarityExperiment
         /// </param>
         /// <param name="homeostaticPlasticityControllerConfiguration">
         /// Homeostatic Plasticity Controller Configuration for spatial pooler
-        /// <seealso cref="NeoCortexApi.SimilarityExperiment.Configuration"/>
+        /// <seealso cref="NeoCortexApi.SimilarityExperiment.Configuration.HomeostaticPlasticityControllerConfiguration"/>
         /// </param>
         /// <param name="encoder">encoder settings for decoding input SDRs</param>
         /// <param name="inputSdrs">input SDRs for encoder to decode</param>
