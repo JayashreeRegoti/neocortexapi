@@ -1,9 +1,6 @@
 # Similarity Experiment
 
-.....
 
-# Abstract
-.....
 
 # Implementation
 
